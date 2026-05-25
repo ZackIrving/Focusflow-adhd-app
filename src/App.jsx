@@ -1,0 +1,376 @@
+import { useMemo, useState } from 'react'
+
+const starterTasks = [
+  {
+    title: 'Complete 1 A+ practice quiz',
+    category: 'A+ Study',
+    energy: 'Medium',
+    time: '20 min',
+    reward: 20,
+    done: false,
+  },
+  {
+    title: 'Update GitHub homelab README',
+    category: 'Homelab',
+    energy: 'Low',
+    time: '15 min',
+    reward: 15,
+    done: false,
+  },
+  {
+    title: 'Apply to 1 remote help desk job',
+    category: 'Career',
+    energy: 'Medium',
+    time: '25 min',
+    reward: 25,
+    done: false,
+  },
+  {
+    title: 'Write 3 TikTok hooks for recovery brand',
+    category: 'Shopify Brand',
+    energy: 'Creative',
+    time: '15 min',
+    reward: 20,
+    done: false,
+  },
+]
+
+const appModes = [
+  'Today',
+  'Brain Dump',
+  'Focus Timer',
+  'Progress',
+]
+
+export default function ADHDProductivityApp() {
+  const [tasks, setTasks] = useState(starterTasks)
+  const [activeMode, setActiveMode] = useState('Today')
+  const [brainDump, setBrainDump] = useState('')
+  const [timerMinutes, setTimerMinutes] = useState(25)
+  const [isRunning, setIsRunning] = useState(false)
+
+  const completedTasks = tasks.filter((task) => task.done)
+  const totalXP = completedTasks.reduce((sum, task) => sum + task.reward, 0)
+  const focusScore = Math.round((completedTasks.length / tasks.length) * 100)
+
+  const nextTinyStep = useMemo(() => {
+    const unfinished = tasks.find((task) => !task.done)
+    if (!unfinished) return 'Celebrate. You cleared your main queue.'
+    return `Start with: ${unfinished.title}`
+  }, [tasks])
+
+  function toggleTask(index) {
+    setTasks((current) =>
+      current.map((task, taskIndex) =>
+        taskIndex === index ? { ...task, done: !task.done } : task
+      )
+    )
+  }
+
+  function addTinyTask() {
+    setTasks((current) => [
+      ...current,
+      {
+        title: 'Do a 5-minute reset task',
+        category: 'Momentum',
+        energy: 'Low',
+        time: '5 min',
+        reward: 10,
+        done: false,
+      },
+    ])
+  }
+
+  function createBreakdown() {
+    if (!brainDump.trim()) return
+
+    const simplified = [
+      {
+        title: 'Pick the easiest starting point',
+        category: 'Brain Dump',
+        energy: 'Low',
+        time: '5 min',
+        reward: 10,
+        done: false,
+      },
+      {
+        title: 'Turn one thought into one task',
+        category: 'Brain Dump',
+        energy: 'Low',
+        time: '10 min',
+        reward: 15,
+        done: false,
+      },
+      {
+        title: 'Schedule the next action only',
+        category: 'Planning',
+        energy: 'Low',
+        time: '5 min',
+        reward: 10,
+        done: false,
+      },
+    ]
+
+    setTasks((current) => [...simplified, ...current])
+    setBrainDump('')
+    setActiveMode('Today')
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-100 text-slate-900">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 lg:py-8">
+        <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl sm:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="mb-2 inline-flex rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-700">
+                Web App + Mobile PWA
+              </p>
+              <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">
+                FocusFlow ADHD Productivity
+              </h1>
+              <p className="mt-3 max-w-2xl text-base text-slate-600 sm:text-lg">
+                One productivity system that syncs across your computer and phone. Start a task on desktop, continue on mobile, and keep your momentum visible everywhere.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-2xl bg-indigo-100 p-4 text-center">
+                <p className="text-xs font-semibold text-indigo-700 sm:text-sm">Focus</p>
+                <h2 className="mt-2 text-2xl font-bold sm:text-3xl">{focusScore}%</h2>
+              </div>
+              <div className="rounded-2xl bg-emerald-100 p-4 text-center">
+                <p className="text-xs font-semibold text-emerald-700 sm:text-sm">XP</p>
+                <h2 className="mt-2 text-2xl font-bold sm:text-3xl">{totalXP}</h2>
+              </div>
+              <div className="rounded-2xl bg-amber-100 p-4 text-center">
+                <p className="text-xs font-semibold text-amber-700 sm:text-sm">Streak</p>
+                <h2 className="mt-2 text-2xl font-bold sm:text-3xl">11</h2>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <nav className="sticky top-0 z-10 my-4 rounded-3xl border border-slate-200 bg-white/90 p-2 shadow-lg backdrop-blur">
+          <div className="grid grid-cols-4 gap-2">
+            {appModes.map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setActiveMode(mode)}
+                className={`rounded-2xl px-3 py-3 text-sm font-semibold transition sm:text-base ${
+                  activeMode === mode
+                    ? 'bg-slate-900 text-white shadow-md'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        {activeMode === 'Today' && (
+          <main className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <section className="space-y-6 xl:col-span-2">
+              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg sm:p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold">Today’s Dopamine Queue</h2>
+                    <p className="mt-1 text-slate-500">Small tasks, visible progress, fast wins.</p>
+                  </div>
+                  <button
+                    onClick={addTinyTask}
+                    className="rounded-2xl bg-indigo-600 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-indigo-700"
+                  >
+                    + Tiny Task
+                  </button>
+                </div>
+
+                <div className="mt-6 space-y-4">
+                  {tasks.map((task, index) => (
+                    <div
+                      key={`${task.title}-${index}`}
+                      className={`rounded-2xl border p-4 transition sm:p-5 ${
+                        task.done
+                          ? 'border-emerald-200 bg-emerald-50'
+                          : 'border-slate-200 bg-white hover:shadow-md'
+                      }`}
+                    >
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <div className="mb-2 flex flex-wrap gap-2">
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                              {task.category}
+                            </span>
+                            <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
+                              {task.energy} Energy
+                            </span>
+                            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                              {task.time}
+                            </span>
+                          </div>
+                          <h3 className={`text-lg font-semibold ${task.done ? 'line-through text-slate-400' : ''}`}>
+                            {task.title}
+                          </h3>
+                        </div>
+
+                        <button
+                          onClick={() => toggleTask(index)}
+                          className={`rounded-xl px-4 py-2 font-semibold transition ${
+                            task.done
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-slate-900 text-white hover:bg-slate-700'
+                          }`}
+                        >
+                          {task.done ? 'Done' : `Start +${task.reward} XP`}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            <aside className="space-y-6">
+              <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg sm:p-6">
+                <h2 className="text-2xl font-bold">Panic Button</h2>
+                <p className="mt-2 text-slate-500">For executive dysfunction moments.</p>
+
+                <div className="mt-5 rounded-2xl bg-red-50 p-4">
+                  <p className="text-sm font-semibold text-red-700">Next tiny step</p>
+                  <h3 className="mt-2 text-lg font-bold">{nextTinyStep}</h3>
+                </div>
+
+                <div className="mt-5 space-y-3">
+                  <button className="w-full rounded-2xl bg-red-500 py-4 font-semibold text-white shadow-lg transition hover:bg-red-600">
+                    I’m Avoiding Everything
+                  </button>
+                  <button
+                    onClick={addTinyTask}
+                    className="w-full rounded-2xl bg-orange-500 py-4 font-semibold text-white shadow-lg transition hover:bg-orange-600"
+                  >
+                    Give Me A Tiny Task
+                  </button>
+                  <button className="w-full rounded-2xl bg-emerald-500 py-4 font-semibold text-white shadow-lg transition hover:bg-emerald-600">
+                    Rebuild Momentum
+                  </button>
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg sm:p-6">
+                <h2 className="text-2xl font-bold">Cross-Device Plan</h2>
+                <div className="mt-5 space-y-3">
+                  {[
+                    'React web app for computer use',
+                    'PWA install for phone home screen',
+                    'Supabase or Firebase login/sync',
+                    'Push reminders later',
+                    'AI assistant added after MVP',
+                  ].map((item) => (
+                    <div key={item} className="rounded-2xl bg-slate-100 p-4 font-medium">
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </aside>
+          </main>
+        )}
+
+        {activeMode === 'Brain Dump' && (
+          <main className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg sm:p-8">
+            <h2 className="text-3xl font-bold">Brain Dump → Action Splitter</h2>
+            <p className="mt-2 max-w-2xl text-slate-500">
+              Dump the chaos here. The app turns it into small next actions instead of one overwhelming project.
+            </p>
+
+            <textarea
+              value={brainDump}
+              onChange={(event) => setBrainDump(event.target.value)}
+              className="mt-6 min-h-[220px] w-full rounded-2xl border border-slate-300 p-4 text-base focus:outline-none focus:ring-4 focus:ring-indigo-200"
+              placeholder="Example: I need to study A+, update my homelab GitHub, work on my Shopify store, clean my room, apply for jobs, and I don’t know where to start..."
+            />
+
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <button
+                onClick={createBreakdown}
+                className="rounded-2xl bg-indigo-600 px-6 py-4 font-semibold text-white shadow-lg transition hover:bg-indigo-700"
+              >
+                Break This Down
+              </button>
+              <button
+                onClick={() => setBrainDump('')}
+                className="rounded-2xl bg-slate-200 px-6 py-4 font-semibold transition hover:bg-slate-300"
+              >
+                Clear
+              </button>
+            </div>
+          </main>
+        )}
+
+        {activeMode === 'Focus Timer' && (
+          <main className="rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-lg sm:p-8">
+            <h2 className="text-3xl font-bold">Hyperfocus Timer</h2>
+            <p className="mt-2 text-slate-500">Choose a sprint that matches your current energy.</p>
+
+            <div className="mx-auto mt-8 flex h-60 w-60 items-center justify-center rounded-full border-[16px] border-indigo-500 shadow-inner sm:h-72 sm:w-72">
+              <div>
+                <p className="text-slate-500">Focus Sprint</p>
+                <h3 className="mt-2 text-6xl font-bold">{timerMinutes}:00</h3>
+              </div>
+            </div>
+
+            <div className="mx-auto mt-8 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
+              {[10, 25, 45].map((minutes) => (
+                <button
+                  key={minutes}
+                  onClick={() => setTimerMinutes(minutes)}
+                  className="rounded-2xl bg-slate-100 py-4 font-semibold transition hover:bg-slate-200"
+                >
+                  {minutes} Min
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-5 flex justify-center gap-3">
+              <button
+                onClick={() => setIsRunning(!isRunning)}
+                className="rounded-2xl bg-indigo-600 px-6 py-4 font-semibold text-white shadow-lg transition hover:bg-indigo-700"
+              >
+                {isRunning ? 'Pause Session' : 'Start Session'}
+              </button>
+              <button
+                onClick={() => setIsRunning(false)}
+                className="rounded-2xl bg-slate-200 px-6 py-4 font-semibold transition hover:bg-slate-300"
+              >
+                Reset
+              </button>
+            </div>
+          </main>
+        )}
+
+        {activeMode === 'Progress' && (
+          <main className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {[
+              { label: 'A+ Study', progress: 70 },
+              { label: 'Homelab Work', progress: 45 },
+              { label: 'Job Applications', progress: 30 },
+              { label: 'Shopify Brand', progress: 55 },
+            ].map((item) => (
+              <section key={item.label} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
+                <div className="mb-3 flex justify-between">
+                  <h3 className="text-xl font-bold">{item.label}</h3>
+                  <span className="font-semibold text-slate-500">{item.progress}%</span>
+                </div>
+                <div className="h-4 overflow-hidden rounded-full bg-slate-200">
+                  <div className="h-full rounded-full bg-indigo-500" style={{ width: `${item.progress}%` }} />
+                </div>
+              </section>
+            ))}
+          </main>
+        )}
+      </div>
+    </div>
+  )
+}
+
+
