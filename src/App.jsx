@@ -52,6 +52,7 @@ export default function ADHDProductivityApp() {
   const [activeMode, setActiveMode] = useState('Today')
   const [brainDump, setBrainDump] = useState('')
   const [timerMinutes, setTimerMinutes] = useState(25)
+  const [timerSeconds, setTimerSeconds] = useState(25 * 60)
   const [isRunning, setIsRunning] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [syncStatus, setSyncStatus] = useState('Loading your tasks...')
@@ -61,6 +62,23 @@ export default function ADHDProductivityApp() {
   useEffect(() => {
     loadTasks()
   }, [])
+
+  useEffect(() => {
+    if (!isRunning || timerSeconds <= 0) return
+
+    const interval = setInterval(() => {
+      setTimerSeconds((current) => {
+        if (current <= 1) {
+          setIsRunning(false)
+          return 0
+        }
+
+        return current - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [isRunning, timerSeconds])
 
   async function loadTasks() {
     setIsLoading(true)
@@ -110,6 +128,24 @@ export default function ADHDProductivityApp() {
     if (!unfinished) return 'Celebrate. You cleared your main queue.'
     return `Start with: ${unfinished.title}`
   }, [tasks])
+
+  function formatTimer(seconds) {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+  }
+
+  function selectTimer(minutes) {
+    setTimerMinutes(minutes)
+    setTimerSeconds(minutes * 60)
+    setIsRunning(false)
+  }
+
+  function resetTimer() {
+    setTimerSeconds(timerMinutes * 60)
+    setIsRunning(false)
+  }
 
   function updateTaskForm(field, value) {
     setTaskForm((current) => ({
@@ -578,7 +614,7 @@ export default function ADHDProductivityApp() {
             <div className="mx-auto mt-8 flex h-60 w-60 items-center justify-center rounded-full border-[16px] border-indigo-500 shadow-inner sm:h-72 sm:w-72">
               <div>
                 <p className="text-slate-500">Focus Sprint</p>
-                <h3 className="mt-2 text-6xl font-bold">{timerMinutes}:00</h3>
+                <h3 className="mt-2 text-6xl font-bold">{formatTimer(timerSeconds)}</h3>
               </div>
             </div>
 
@@ -586,7 +622,7 @@ export default function ADHDProductivityApp() {
               {[10, 25, 45].map((minutes) => (
                 <button
                   key={minutes}
-                  onClick={() => setTimerMinutes(minutes)}
+                  onClick={() => selectTimer(minutes)}
                   className="rounded-2xl bg-slate-100 py-4 font-semibold transition hover:bg-slate-200"
                 >
                   {minutes} Min
@@ -602,7 +638,7 @@ export default function ADHDProductivityApp() {
                 {isRunning ? 'Pause Session' : 'Start Session'}
               </button>
               <button
-                onClick={() => setIsRunning(false)}
+                onClick={resetTimer}
                 className="rounded-2xl bg-slate-200 px-6 py-4 font-semibold transition hover:bg-slate-300"
               >
                 Reset
@@ -635,4 +671,5 @@ export default function ADHDProductivityApp() {
     </div>
   )
 }
+
 
