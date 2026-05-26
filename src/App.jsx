@@ -38,6 +38,15 @@ const starterTasks = [
 
 const appModes = ['Today', 'Brain Dump', 'Focus Timer', 'Progress']
 
+const emptyTaskForm = {
+  title: '',
+  category: 'Personal',
+  energy: 'Low',
+  time: '15 min',
+  reward: 10,
+  done: false,
+}
+
 export default function ADHDProductivityApp() {
   const [tasks, setTasks] = useState([])
   const [activeMode, setActiveMode] = useState('Today')
@@ -46,6 +55,8 @@ export default function ADHDProductivityApp() {
   const [isRunning, setIsRunning] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [syncStatus, setSyncStatus] = useState('Loading your tasks...')
+  const [taskForm, setTaskForm] = useState(emptyTaskForm)
+  const [showTaskForm, setShowTaskForm] = useState(false)
 
   useEffect(() => {
     loadTasks()
@@ -100,6 +111,34 @@ export default function ADHDProductivityApp() {
     return `Start with: ${unfinished.title}`
   }, [tasks])
 
+  function updateTaskForm(field, value) {
+    setTaskForm((current) => ({
+      ...current,
+      [field]: field === 'reward' ? Number(value) : value,
+    }))
+  }
+
+  async function handleCreateCustomTask(event) {
+    event.preventDefault()
+
+    if (!taskForm.title.trim()) {
+      setSyncStatus('Add a task title first.')
+      return
+    }
+
+    await addTask({
+      title: taskForm.title.trim(),
+      category: taskForm.category,
+      energy: taskForm.energy,
+      time: taskForm.time,
+      reward: Number(taskForm.reward || 10),
+      done: false,
+    })
+
+    setTaskForm(emptyTaskForm)
+    setShowTaskForm(false)
+  }
+
   async function toggleTask(taskToUpdate) {
     const updatedDoneStatus = !taskToUpdate.done
 
@@ -141,6 +180,27 @@ export default function ADHDProductivityApp() {
     }
 
     setTasks((current) => [...current, data])
+    setSyncStatus('Synced with Supabase')
+  }
+
+  async function deleteTask(taskToDelete) {
+    const confirmed = window.confirm(`Delete this task?\n\n${taskToDelete.title}`)
+    if (!confirmed) return
+
+    setTasks((current) => current.filter((task) => task.id !== taskToDelete.id))
+    setSyncStatus('Deleting...')
+
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', taskToDelete.id)
+
+    if (error) {
+      console.error('Error deleting task:', error)
+      setSyncStatus('Delete failed. Refresh to reload from Supabase.')
+      return
+    }
+
     setSyncStatus('Synced with Supabase')
   }
 
@@ -273,13 +333,112 @@ export default function ADHDProductivityApp() {
                     <h2 className="text-2xl font-bold">Today’s Dopamine Queue</h2>
                     <p className="mt-1 text-slate-500">Small tasks, visible progress, fast wins.</p>
                   </div>
-                  <button
-                    onClick={addTinyTask}
-                    className="rounded-2xl bg-indigo-600 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-indigo-700"
-                  >
-                    + Tiny Task
-                  </button>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button
+                      onClick={() => setShowTaskForm(!showTaskForm)}
+                      className="rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-slate-700"
+                    >
+                      {showTaskForm ? 'Close Form' : '+ Custom Task'}
+                    </button>
+                    <button
+                      onClick={addTinyTask}
+                      className="rounded-2xl bg-indigo-600 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-indigo-700"
+                    >
+                      + Tiny Task
+                    </button>
+                  </div>
                 </div>
+
+                {showTaskForm && (
+                  <form onSubmit={handleCreateCustomTask} className="mt-6 rounded-3xl border border-indigo-100 bg-indigo-50 p-5">
+                    <h3 className="text-xl font-bold">Create a custom task</h3>
+                    <p className="mt-1 text-sm text-slate-600">Make the task specific, small, and easy to start.</p>
+
+                    <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <label className="md:col-span-2">
+                        <span className="text-sm font-semibold text-slate-700">Task title</span>
+                        <input
+                          value={taskForm.title}
+                          onChange={(event) => updateTaskForm('title', event.target.value)}
+                          className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-indigo-200"
+                          placeholder="Example: Study A+ networking for 20 minutes"
+                        />
+                      </label>
+
+                      <label>
+                        <span className="text-sm font-semibold text-slate-700">Category</span>
+                        <input
+                          value={taskForm.category}
+                          onChange={(event) => updateTaskForm('category', event.target.value)}
+                          className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-indigo-200"
+                          placeholder="A+ Study, Homelab, Career, Shopify"
+                        />
+                      </label>
+
+                      <label>
+                        <span className="text-sm font-semibold text-slate-700">Energy</span>
+                        <select
+                          value={taskForm.energy}
+                          onChange={(event) => updateTaskForm('energy', event.target.value)}
+                          className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-indigo-200"
+                        >
+                          <option>Low</option>
+                          <option>Medium</option>
+                          <option>High</option>
+                          <option>Creative</option>
+                        </select>
+                      </label>
+
+                      <label>
+                        <span className="text-sm font-semibold text-slate-700">Time estimate</span>
+                        <select
+                          value={taskForm.time}
+                          onChange={(event) => updateTaskForm('time', event.target.value)}
+                          className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-indigo-200"
+                        >
+                          <option>5 min</option>
+                          <option>10 min</option>
+                          <option>15 min</option>
+                          <option>20 min</option>
+                          <option>25 min</option>
+                          <option>45 min</option>
+                          <option>60 min</option>
+                        </select>
+                      </label>
+
+                      <label>
+                        <span className="text-sm font-semibold text-slate-700">XP reward</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={taskForm.reward}
+                          onChange={(event) => updateTaskForm('reward', event.target.value)}
+                          className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-indigo-200"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                      <button
+                        type="submit"
+                        className="rounded-2xl bg-indigo-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:bg-indigo-700"
+                      >
+                        Save Task
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTaskForm(emptyTaskForm)
+                          setShowTaskForm(false)
+                        }}
+                        className="rounded-2xl bg-slate-200 px-6 py-3 font-semibold transition hover:bg-slate-300"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
 
                 <div className="mt-6 space-y-4">
                   {tasks.map((task) => (
@@ -309,16 +468,24 @@ export default function ADHDProductivityApp() {
                           </h3>
                         </div>
 
-                        <button
-                          onClick={() => toggleTask(task)}
-                          className={`rounded-xl px-4 py-2 font-semibold transition ${
-                            task.done
-                              ? 'bg-emerald-600 text-white'
-                              : 'bg-slate-900 text-white hover:bg-slate-700'
-                          }`}
-                        >
-                          {task.done ? 'Done' : `Start +${task.reward} XP`}
-                        </button>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <button
+                            onClick={() => toggleTask(task)}
+                            className={`rounded-xl px-4 py-2 font-semibold transition ${
+                              task.done
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-slate-900 text-white hover:bg-slate-700'
+                            }`}
+                          >
+                            {task.done ? 'Done' : `Start +${task.reward} XP`}
+                          </button>
+                          <button
+                            onClick={() => deleteTask(task)}
+                            className="rounded-xl bg-red-100 px-4 py-2 font-semibold text-red-700 transition hover:bg-red-200"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -356,9 +523,9 @@ export default function ADHDProductivityApp() {
                 <h2 className="text-2xl font-bold">Cross-Device Sync</h2>
                 <div className="mt-5 space-y-3">
                   {[
-                    'Tasks save to Supabase',
+                    'Custom tasks save to Supabase',
+                    'Delete removes tasks everywhere',
                     'XP updates from completed tasks',
-                    'Brain dump tasks save online',
                     'Computer and phone share the same data',
                     'Login can be added next',
                   ].map((item) => (
@@ -468,3 +635,4 @@ export default function ADHDProductivityApp() {
     </div>
   )
 }
+
