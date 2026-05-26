@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { supabase } from './supabaseClient'
 
 const starterTasks = [
   {
@@ -35,23 +36,63 @@ const starterTasks = [
   },
 ]
 
-const appModes = [
-  'Today',
-  'Brain Dump',
-  'Focus Timer',
-  'Progress',
-]
+const appModes = ['Today', 'Brain Dump', 'Focus Timer', 'Progress']
 
 export default function ADHDProductivityApp() {
-  const [tasks, setTasks] = useState(starterTasks)
+  const [tasks, setTasks] = useState([])
   const [activeMode, setActiveMode] = useState('Today')
   const [brainDump, setBrainDump] = useState('')
   const [timerMinutes, setTimerMinutes] = useState(25)
   const [isRunning, setIsRunning] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [syncStatus, setSyncStatus] = useState('Loading your tasks...')
+
+  useEffect(() => {
+    loadTasks()
+  }, [])
+
+  async function loadTasks() {
+    setIsLoading(true)
+    setSyncStatus('Loading your tasks...')
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      console.error('Error loading tasks:', error)
+      setSyncStatus('Could not load Supabase tasks. Using starter tasks for now.')
+      setTasks(starterTasks)
+      setIsLoading(false)
+      return
+    }
+
+    if (!data || data.length === 0) {
+      const { data: insertedTasks, error: insertError } = await supabase
+        .from('tasks')
+        .insert(starterTasks)
+        .select()
+
+      if (insertError) {
+        console.error('Error creating starter tasks:', insertError)
+        setTasks(starterTasks)
+        setSyncStatus('Starter tasks loaded locally. Supabase insert failed.')
+      } else {
+        setTasks(insertedTasks)
+        setSyncStatus('Synced with Supabase')
+      }
+    } else {
+      setTasks(data)
+      setSyncStatus('Synced with Supabase')
+    }
+
+    setIsLoading(false)
+  }
 
   const completedTasks = tasks.filter((task) => task.done)
-  const totalXP = completedTasks.reduce((sum, task) => sum + task.reward, 0)
-  const focusScore = Math.round((completedTasks.length / tasks.length) * 100)
+  const totalXP = completedTasks.reduce((sum, task) => sum + Number(task.reward || 0), 0)
+  const focusScore = tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0
 
   const nextTinyStep = useMemo(() => {
     const unfinished = tasks.find((task) => !task.done)
@@ -59,29 +100,62 @@ export default function ADHDProductivityApp() {
     return `Start with: ${unfinished.title}`
   }, [tasks])
 
-  function toggleTask(index) {
+  async function toggleTask(taskToUpdate) {
+    const updatedDoneStatus = !taskToUpdate.done
+
     setTasks((current) =>
-      current.map((task, taskIndex) =>
-        taskIndex === index ? { ...task, done: !task.done } : task
+      current.map((task) =>
+        task.id === taskToUpdate.id ? { ...task, done: updatedDoneStatus } : task
       )
     )
+
+    setSyncStatus('Saving...')
+
+    const { error } = await supabase
+      .from('tasks')
+      .update({ done: updatedDoneStatus })
+      .eq('id', taskToUpdate.id)
+
+    if (error) {
+      console.error('Error updating task:', error)
+      setSyncStatus('Save failed. Refresh to reload from Supabase.')
+      return
+    }
+
+    setSyncStatus('Synced with Supabase')
+  }
+
+  async function addTask(task) {
+    setSyncStatus('Saving...')
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert([task])
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error adding task:', error)
+      setSyncStatus('Task could not save to Supabase.')
+      return
+    }
+
+    setTasks((current) => [...current, data])
+    setSyncStatus('Synced with Supabase')
   }
 
   function addTinyTask() {
-    setTasks((current) => [
-      ...current,
-      {
-        title: 'Do a 5-minute reset task',
-        category: 'Momentum',
-        energy: 'Low',
-        time: '5 min',
-        reward: 10,
-        done: false,
-      },
-    ])
+    addTask({
+      title: 'Do a 5-minute reset task',
+      category: 'Momentum',
+      energy: 'Low',
+      time: '5 min',
+      reward: 10,
+      done: false,
+    })
   }
 
-  function createBreakdown() {
+  async function createBreakdown() {
     if (!brainDump.trim()) return
 
     const simplified = [
@@ -111,9 +185,23 @@ export default function ADHDProductivityApp() {
       },
     ]
 
-    setTasks((current) => [...simplified, ...current])
+    setSyncStatus('Saving brain dump tasks...')
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert(simplified)
+      .select()
+
+    if (error) {
+      console.error('Error saving brain dump tasks:', error)
+      setSyncStatus('Brain dump tasks could not save to Supabase.')
+      return
+    }
+
+    setTasks((current) => [...data, ...current])
     setBrainDump('')
     setActiveMode('Today')
+    setSyncStatus('Synced with Supabase')
   }
 
   return (
@@ -131,6 +219,7 @@ export default function ADHDProductivityApp() {
               <p className="mt-3 max-w-2xl text-base text-slate-600 sm:text-lg">
                 One productivity system that syncs across your computer and phone. Start a task on desktop, continue on mobile, and keep your momentum visible everywhere.
               </p>
+              <p className="mt-3 text-sm font-semibold text-indigo-700">{syncStatus}</p>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
@@ -143,8 +232,8 @@ export default function ADHDProductivityApp() {
                 <h2 className="mt-2 text-2xl font-bold sm:text-3xl">{totalXP}</h2>
               </div>
               <div className="rounded-2xl bg-amber-100 p-4 text-center">
-                <p className="text-xs font-semibold text-amber-700 sm:text-sm">Streak</p>
-                <h2 className="mt-2 text-2xl font-bold sm:text-3xl">11</h2>
+                <p className="text-xs font-semibold text-amber-700 sm:text-sm">Tasks</p>
+                <h2 className="mt-2 text-2xl font-bold sm:text-3xl">{completedTasks.length}/{tasks.length}</h2>
               </div>
             </div>
           </div>
@@ -168,7 +257,14 @@ export default function ADHDProductivityApp() {
           </div>
         </nav>
 
-        {activeMode === 'Today' && (
+        {isLoading && (
+          <main className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-lg">
+            <h2 className="text-2xl font-bold">Loading your FocusFlow tasks...</h2>
+            <p className="mt-2 text-slate-500">Connecting to Supabase.</p>
+          </main>
+        )}
+
+        {!isLoading && activeMode === 'Today' && (
           <main className="grid grid-cols-1 gap-6 xl:grid-cols-3">
             <section className="space-y-6 xl:col-span-2">
               <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg sm:p-6">
@@ -186,9 +282,9 @@ export default function ADHDProductivityApp() {
                 </div>
 
                 <div className="mt-6 space-y-4">
-                  {tasks.map((task, index) => (
+                  {tasks.map((task) => (
                     <div
-                      key={`${task.title}-${index}`}
+                      key={task.id || task.title}
                       className={`rounded-2xl border p-4 transition sm:p-5 ${
                         task.done
                           ? 'border-emerald-200 bg-emerald-50'
@@ -214,7 +310,7 @@ export default function ADHDProductivityApp() {
                         </div>
 
                         <button
-                          onClick={() => toggleTask(index)}
+                          onClick={() => toggleTask(task)}
                           className={`rounded-xl px-4 py-2 font-semibold transition ${
                             task.done
                               ? 'bg-emerald-600 text-white'
@@ -257,14 +353,14 @@ export default function ADHDProductivityApp() {
               </section>
 
               <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg sm:p-6">
-                <h2 className="text-2xl font-bold">Cross-Device Plan</h2>
+                <h2 className="text-2xl font-bold">Cross-Device Sync</h2>
                 <div className="mt-5 space-y-3">
                   {[
-                    'React web app for computer use',
-                    'PWA install for phone home screen',
-                    'Supabase or Firebase login/sync',
-                    'Push reminders later',
-                    'AI assistant added after MVP',
+                    'Tasks save to Supabase',
+                    'XP updates from completed tasks',
+                    'Brain dump tasks save online',
+                    'Computer and phone share the same data',
+                    'Login can be added next',
                   ].map((item) => (
                     <div key={item} className="rounded-2xl bg-slate-100 p-4 font-medium">
                       {item}
@@ -276,11 +372,11 @@ export default function ADHDProductivityApp() {
           </main>
         )}
 
-        {activeMode === 'Brain Dump' && (
+        {!isLoading && activeMode === 'Brain Dump' && (
           <main className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg sm:p-8">
             <h2 className="text-3xl font-bold">Brain Dump → Action Splitter</h2>
             <p className="mt-2 max-w-2xl text-slate-500">
-              Dump the chaos here. The app turns it into small next actions instead of one overwhelming project.
+              Dump the chaos here. The app turns it into small next actions and saves them to Supabase.
             </p>
 
             <textarea
@@ -295,7 +391,7 @@ export default function ADHDProductivityApp() {
                 onClick={createBreakdown}
                 className="rounded-2xl bg-indigo-600 px-6 py-4 font-semibold text-white shadow-lg transition hover:bg-indigo-700"
               >
-                Break This Down
+                Break This Down + Save
               </button>
               <button
                 onClick={() => setBrainDump('')}
@@ -307,7 +403,7 @@ export default function ADHDProductivityApp() {
           </main>
         )}
 
-        {activeMode === 'Focus Timer' && (
+        {!isLoading && activeMode === 'Focus Timer' && (
           <main className="rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-lg sm:p-8">
             <h2 className="text-3xl font-bold">Hyperfocus Timer</h2>
             <p className="mt-2 text-slate-500">Choose a sprint that matches your current energy.</p>
@@ -348,13 +444,13 @@ export default function ADHDProductivityApp() {
           </main>
         )}
 
-        {activeMode === 'Progress' && (
+        {!isLoading && activeMode === 'Progress' && (
           <main className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {[
-              { label: 'A+ Study', progress: 70 },
-              { label: 'Homelab Work', progress: 45 },
-              { label: 'Job Applications', progress: 30 },
-              { label: 'Shopify Brand', progress: 55 },
+              { label: 'Total Tasks Completed', progress: focusScore },
+              { label: 'XP Earned', progress: Math.min(totalXP, 100) },
+              { label: 'Brain Dump Progress', progress: tasks.filter((task) => task.category === 'Brain Dump' && task.done).length * 25 },
+              { label: 'Momentum', progress: Math.min(completedTasks.length * 20, 100) },
             ].map((item) => (
               <section key={item.label} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
                 <div className="mb-3 flex justify-between">
@@ -362,7 +458,7 @@ export default function ADHDProductivityApp() {
                   <span className="font-semibold text-slate-500">{item.progress}%</span>
                 </div>
                 <div className="h-4 overflow-hidden rounded-full bg-slate-200">
-                  <div className="h-full rounded-full bg-indigo-500" style={{ width: `${item.progress}%` }} />
+                  <div className="h-full rounded-full bg-indigo-500" style={{ width: `${Math.min(item.progress, 100)}%` }} />
                 </div>
               </section>
             ))}
@@ -372,5 +468,3 @@ export default function ADHDProductivityApp() {
     </div>
   )
 }
-
-
