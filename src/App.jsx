@@ -216,6 +216,13 @@ export default function ADHDProductivityApp() {
   const completedTasks = tasks.filter((task) => task.done)
   const totalXP = completedTasks.reduce((sum, task) => sum + Number(task.reward || 0), 0)
   const focusScore = tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0
+  const activeTasks = tasks.filter((task) => !task.done)
+  const completedToday = completedTasks.length
+  const nextTask = activeTasks[0]?.title || 'No active tasks. Nice work.'
+  const estimatedFocusMinutes = completedTasks.reduce((sum, task) => {
+    const minutes = parseInt(task.time)
+    return sum + (isNaN(minutes) ? 0 : minutes)
+  }, 0)
 
   const nextTinyStep = useMemo(() => {
     const unfinished = tasks.find((task) => !task.done)
@@ -590,11 +597,10 @@ export default function ADHDProductivityApp() {
               <button
                 key={mode}
                 onClick={() => setActiveMode(mode)}
-                className={`rounded-2xl px-3 py-3 text-sm font-semibold transition sm:text-base ${
-                  activeMode === mode
-                    ? 'bg-slate-900 text-white shadow-md'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+                className={`rounded-2xl px-3 py-3 text-sm font-semibold transition sm:text-base ${activeMode === mode
+                  ? 'bg-slate-900 text-white shadow-md'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
               >
                 {mode}
               </button>
@@ -729,11 +735,10 @@ export default function ADHDProductivityApp() {
                   {tasks.map((task) => (
                     <div
                       key={task.id || task.title}
-                      className={`rounded-2xl border p-4 transition sm:p-5 ${
-                        task.done
-                          ? 'border-emerald-200 bg-emerald-50'
-                          : 'border-slate-200 bg-white hover:shadow-md'
-                      }`}
+                      className={`rounded-2xl border p-4 transition sm:p-5 ${task.done
+                        ? 'border-emerald-200 bg-emerald-50'
+                        : 'border-slate-200 bg-white hover:shadow-md'
+                        }`}
                     >
                       {editingTaskId === task.id ? (
                         <div className="rounded-2xl bg-blue-50 p-4">
@@ -840,11 +845,10 @@ export default function ADHDProductivityApp() {
                           <div className="flex flex-col gap-2 sm:flex-row">
                             <button
                               onClick={() => toggleTask(task)}
-                              className={`rounded-xl px-4 py-2 font-semibold transition ${
-                                task.done
-                                  ? 'bg-emerald-600 text-white'
-                                  : 'bg-slate-900 text-white hover:bg-slate-700'
-                              }`}
+                              className={`rounded-xl px-4 py-2 font-semibold transition ${task.done
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-slate-900 text-white hover:bg-slate-700'
+                                }`}
                             >
                               {task.done ? 'Done' : `Start +${task.reward} XP`}
                             </button>
@@ -896,19 +900,34 @@ export default function ADHDProductivityApp() {
               </section>
 
               <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg sm:p-6">
-                <h2 className="text-2xl font-bold">Private Sync</h2>
-                <div className="mt-5 space-y-3">
-                  {[
-                    'Tasks belong to your login',
-                    'Custom tasks save to Supabase',
-                    'Edit updates tasks everywhere',
-                    'Delete removes tasks everywhere',
-                    'RLS security comes next',
-                  ].map((item) => (
-                    <div key={item} className="rounded-2xl bg-slate-100 p-4 font-medium">
-                      {item}
-                    </div>
-                  ))}
+                <h2 className="text-2xl font-bold">Today’s Stats</h2>
+                <p className="mt-2 text-slate-500">Quick progress feedback for momentum.</p>
+
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-emerald-100 p-4">
+                    <p className="text-sm font-semibold text-emerald-700">Completed</p>
+                    <h3 className="mt-2 text-3xl font-bold">{completedToday}</h3>
+                  </div>
+
+                  <div className="rounded-2xl bg-indigo-100 p-4">
+                    <p className="text-sm font-semibold text-indigo-700">XP Earned</p>
+                    <h3 className="mt-2 text-3xl font-bold">{totalXP}</h3>
+                  </div>
+
+                  <div className="rounded-2xl bg-amber-100 p-4">
+                    <p className="text-sm font-semibold text-amber-700">Active Tasks</p>
+                    <h3 className="mt-2 text-3xl font-bold">{activeTasks.length}</h3>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-100 p-4">
+                    <p className="text-sm font-semibold text-slate-700">Focus Minutes</p>
+                    <h3 className="mt-2 text-3xl font-bold">{estimatedFocusMinutes}</h3>
+                  </div>
+                </div>
+
+                <div className="mt-5 rounded-2xl bg-slate-100 p-4">
+                  <p className="text-sm font-semibold text-slate-600">Next Recommended Task</p>
+                  <h3 className="mt-2 text-lg font-bold">{nextTask}</h3>
                 </div>
               </section>
             </aside>
