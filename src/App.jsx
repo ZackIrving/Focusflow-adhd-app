@@ -48,22 +48,57 @@ const emptyTaskForm = {
 }
 
 export default function ADHDProductivityApp() {
+  const [user, setUser] = useState(null)
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [authStatus, setAuthStatus] = useState('Sign in or create an account to use FocusFlow.')
+  const [isAuthLoading, setIsAuthLoading] = useState(true)
+
   const [tasks, setTasks] = useState([])
   const [activeMode, setActiveMode] = useState('Today')
   const [brainDump, setBrainDump] = useState('')
   const [timerMinutes, setTimerMinutes] = useState(25)
   const [timerSeconds, setTimerSeconds] = useState(25 * 60)
   const [isRunning, setIsRunning] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [syncStatus, setSyncStatus] = useState('Loading your tasks...')
+  const [isLoading, setIsLoading] = useState(false)
+  const [syncStatus, setSyncStatus] = useState('Waiting for login...')
   const [taskForm, setTaskForm] = useState(emptyTaskForm)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState(null)
   const [editForm, setEditForm] = useState(emptyTaskForm)
 
   useEffect(() => {
-    loadTasks()
+    async function getCurrentSession() {
+      const { data, error } = await supabase.auth.getSession()
+
+      if (error) {
+        console.error('Session error:', error)
+        setAuthStatus('Could not check login status.')
+      }
+
+      setUser(data?.session?.user || null)
+      setIsAuthLoading(false)
+    }
+
+    getCurrentSession()
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null)
+    })
+
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      loadTasks(user.id)
+    } else {
+      setTasks([])
+      setSyncStatus('Waiting for login...')
+    }
+  }, [user])
 
   useEffect(() => {
     if (!isRunning || timerSeconds <= 0) return
@@ -82,33 +117,90 @@ export default function ADHDProductivityApp() {
     return () => clearInterval(interval)
   }, [isRunning, timerSeconds])
 
-  async function loadTasks() {
+  async function signUp() {
+    if (!authEmail.trim() || !authPassword.trim()) {
+      setAuthStatus('Enter an email and password first.')
+      return
+    }
+
+    setAuthStatus('Creating account...')
+
+    const { error } = await supabase.auth.signUp({
+      email: authEmail.trim(),
+      password: authPassword,
+    })
+
+    if (error) {
+      console.error('Sign up error:', error)
+      setAuthStatus(error.message)
+      return
+    }
+
+    setAuthStatus('Account created. Check your email if Supabase asks for confirmation, then sign in.')
+  }
+
+  async function signIn() {
+    if (!authEmail.trim() || !authPassword.trim()) {
+      setAuthStatus('Enter an email and password first.')
+      return
+    }
+
+    setAuthStatus('Signing in...')
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: authEmail.trim(),
+      password: authPassword,
+    })
+
+    if (error) {
+      console.error('Sign in error:', error)
+      setAuthStatus(error.message)
+      return
+    }
+
+    setAuthEmail('')
+    setAuthPassword('')
+    setAuthStatus('Signed in.')
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut()
+    setTasks([])
+    setAuthStatus('Signed out.')
+  }
+
+  async function loadTasks(userId) {
     setIsLoading(true)
     setSyncStatus('Loading your tasks...')
 
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', { ascending: true })
 
     if (error) {
       console.error('Error loading tasks:', error)
-      setSyncStatus('Could not load Supabase tasks. Using starter tasks for now.')
-      setTasks(starterTasks)
+      setSyncStatus('Could not load your Supabase tasks.')
       setIsLoading(false)
       return
     }
 
     if (!data || data.length === 0) {
+      const tasksWithUser = starterTasks.map((task) => ({
+        ...task,
+        user_id: userId,
+      }))
+
       const { data: insertedTasks, error: insertError } = await supabase
         .from('tasks')
-        .insert(starterTasks)
+        .insert(tasksWithUser)
         .select()
 
       if (insertError) {
         console.error('Error creating starter tasks:', insertError)
-        setTasks(starterTasks)
-        setSyncStatus('Starter tasks loaded locally. Supabase insert failed.')
+        setTasks([])
+        setSyncStatus('Starter tasks could not save to Supabase.')
       } else {
         setTasks(insertedTasks)
         setSyncStatus('Synced with Supabase')
@@ -216,6 +308,7 @@ export default function ADHDProductivityApp() {
       .from('tasks')
       .update({ done: updatedDoneStatus })
       .eq('id', taskToUpdate.id)
+      .eq('user_id', user.id)
 
     if (error) {
       console.error('Error updating task:', error)
@@ -227,11 +320,16 @@ export default function ADHDProductivityApp() {
   }
 
   async function addTask(task) {
+    if (!user) {
+      setSyncStatus('Sign in before adding tasks.')
+      return
+    }
+
     setSyncStatus('Saving...')
 
     const { data, error } = await supabase
       .from('tasks')
-      .insert([task])
+      .insert([{ ...task, user_id: user.id }])
       .select()
       .single()
 
@@ -271,6 +369,7 @@ export default function ADHDProductivityApp() {
       .from('tasks')
       .update(updatedTask)
       .eq('id', taskToEdit.id)
+      .eq('user_id', user.id)
 
     if (error) {
       console.error('Error editing task:', error)
@@ -294,6 +393,7 @@ export default function ADHDProductivityApp() {
       .from('tasks')
       .delete()
       .eq('id', taskToDelete.id)
+      .eq('user_id', user.id)
 
     if (error) {
       console.error('Error deleting task:', error)
@@ -317,6 +417,10 @@ export default function ADHDProductivityApp() {
 
   async function createBreakdown() {
     if (!brainDump.trim()) return
+    if (!user) {
+      setSyncStatus('Sign in before saving brain dump tasks.')
+      return
+    }
 
     const simplified = [
       {
@@ -326,6 +430,7 @@ export default function ADHDProductivityApp() {
         time: '5 min',
         reward: 10,
         done: false,
+        user_id: user.id,
       },
       {
         title: 'Turn one thought into one task',
@@ -334,6 +439,7 @@ export default function ADHDProductivityApp() {
         time: '10 min',
         reward: 15,
         done: false,
+        user_id: user.id,
       },
       {
         title: 'Schedule the next action only',
@@ -342,6 +448,7 @@ export default function ADHDProductivityApp() {
         time: '5 min',
         reward: 10,
         done: false,
+        user_id: user.id,
       },
     ]
 
@@ -364,6 +471,78 @@ export default function ADHDProductivityApp() {
     setSyncStatus('Synced with Supabase')
   }
 
+  if (isAuthLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-100 p-6 text-slate-900">
+        <div className="rounded-3xl bg-white p-8 text-center shadow-xl">
+          <h1 className="text-3xl font-bold">FocusFlow</h1>
+          <p className="mt-2 text-slate-500">Checking login status...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-100 p-6 text-slate-900">
+        <div className="mx-auto flex min-h-[90vh] max-w-xl items-center">
+          <div className="w-full rounded-3xl border border-slate-200 bg-white p-6 shadow-xl sm:p-8">
+            <p className="mb-3 inline-flex rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-700">
+              Private ADHD Productivity App
+            </p>
+            <h1 className="text-4xl font-bold tracking-tight">FocusFlow Login</h1>
+            <p className="mt-3 text-slate-600">
+              Sign in to sync your tasks, XP, brain dumps, and progress across your computer and phone.
+            </p>
+
+            <div className="mt-6 space-y-4">
+              <label>
+                <span className="text-sm font-semibold text-slate-700">Email</span>
+                <input
+                  type="email"
+                  value={authEmail}
+                  onChange={(event) => setAuthEmail(event.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-4 focus:outline-none focus:ring-4 focus:ring-indigo-200"
+                  placeholder="you@example.com"
+                />
+              </label>
+
+              <label>
+                <span className="text-sm font-semibold text-slate-700">Password</span>
+                <input
+                  type="password"
+                  value={authPassword}
+                  onChange={(event) => setAuthPassword(event.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-4 focus:outline-none focus:ring-4 focus:ring-indigo-200"
+                  placeholder="Use at least 6 characters"
+                />
+              </label>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <button
+                onClick={signIn}
+                className="rounded-2xl bg-indigo-600 px-5 py-4 font-semibold text-white shadow-lg transition hover:bg-indigo-700"
+              >
+                Sign In
+              </button>
+              <button
+                onClick={signUp}
+                className="rounded-2xl bg-slate-900 px-5 py-4 font-semibold text-white shadow-lg transition hover:bg-slate-700"
+              >
+                Create Account
+              </button>
+            </div>
+
+            <p className="mt-5 rounded-2xl bg-slate-100 p-4 text-sm font-medium text-slate-700">
+              {authStatus}
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 lg:py-8">
@@ -371,7 +550,7 @@ export default function ADHDProductivityApp() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="mb-2 inline-flex rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-700">
-                Web App + Mobile PWA
+                Logged in as {user.email}
               </p>
               <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">
                 FocusFlow ADHD Productivity
@@ -380,6 +559,12 @@ export default function ADHDProductivityApp() {
                 One productivity system that syncs across your computer and phone. Start a task on desktop, continue on mobile, and keep your momentum visible everywhere.
               </p>
               <p className="mt-3 text-sm font-semibold text-indigo-700">{syncStatus}</p>
+              <button
+                onClick={signOut}
+                className="mt-4 rounded-2xl bg-slate-200 px-4 py-2 text-sm font-semibold transition hover:bg-slate-300"
+              >
+                Log Out
+              </button>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
@@ -711,14 +896,14 @@ export default function ADHDProductivityApp() {
               </section>
 
               <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg sm:p-6">
-                <h2 className="text-2xl font-bold">Cross-Device Sync</h2>
+                <h2 className="text-2xl font-bold">Private Sync</h2>
                 <div className="mt-5 space-y-3">
                   {[
+                    'Tasks belong to your login',
                     'Custom tasks save to Supabase',
                     'Edit updates tasks everywhere',
                     'Delete removes tasks everywhere',
-                    'XP updates from completed tasks',
-                    'Login can be added next',
+                    'RLS security comes next',
                   ].map((item) => (
                     <div key={item} className="rounded-2xl bg-slate-100 p-4 font-medium">
                       {item}
@@ -826,6 +1011,7 @@ export default function ADHDProductivityApp() {
     </div>
   )
 }
+
 
 
 
