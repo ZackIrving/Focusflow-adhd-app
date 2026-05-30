@@ -67,6 +67,10 @@ export default function ADHDProductivityApp() {
   const [editingTaskId, setEditingTaskId] = useState(null)
   const [editForm, setEditForm] = useState(emptyTaskForm)
 
+  const [reminderBanner, setReminderBanner] = useState('')
+  const [notificationPermission, setNotificationPermission] = useState(
+    'Notification' in window ? Notification.permission : 'unsupported'
+  )
   useEffect(() => {
     async function getCurrentSession() {
       const { data, error } = await supabase.auth.getSession()
@@ -107,6 +111,15 @@ export default function ADHDProductivityApp() {
       setTimerSeconds((current) => {
         if (current <= 1) {
           setIsRunning(false)
+          setReminderBanner('Focus session complete. Take a short break.')
+
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('FocusFlow', {
+              body: 'Focus session complete. Take a short break.',
+              icon: '/icon-192.png',
+            })
+          }
+
           return 0
         }
 
@@ -167,6 +180,25 @@ export default function ADHDProductivityApp() {
     await supabase.auth.signOut()
     setTasks([])
     setAuthStatus('Signed out.')
+  }
+
+  async function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+      setReminderBanner('Browser notifications are not supported on this device.')
+      return
+    }
+
+    const permission = await Notification.requestPermission()
+
+    setNotificationPermission(permission)
+
+    if (permission === 'granted') {
+      setReminderBanner(
+        'Notifications enabled. FocusFlow can now notify you when sessions end.'
+      )
+    } else {
+      setReminderBanner('Notifications were not enabled.')
+    }
   }
 
   async function loadTasks(userId) {
@@ -590,6 +622,19 @@ export default function ADHDProductivityApp() {
             </div>
           </div>
         </header>
+        {reminderBanner && (
+          <div className="my-4 rounded-3xl border border-indigo-200 bg-indigo-50 p-4 shadow">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="font-semibold text-indigo-800">{reminderBanner}</p>
+              <button
+                onClick={() => setReminderBanner('')}
+                className="rounded-xl bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
 
         <nav className="sticky top-0 z-10 my-4 rounded-3xl border border-slate-200 bg-white/90 p-2 shadow-lg backdrop-blur">
           <div className="grid grid-cols-4 gap-2">
@@ -969,6 +1014,19 @@ export default function ADHDProductivityApp() {
           <main className="rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-lg sm:p-8">
             <h2 className="text-3xl font-bold">Hyperfocus Timer</h2>
             <p className="mt-2 text-slate-500">Choose a sprint that matches your current energy.</p>
+            
+            <div className="mt-5">
+              <button
+                onClick={requestNotificationPermission}
+                className="rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-slate-700"
+              >
+                Enable Timer Notifications
+              </button>
+
+              <p className="mt-2 text-sm text-slate-500">
+                Notification status: {notificationPermission}
+              </p>
+            </div>
 
             <div className="mx-auto mt-8 flex h-60 w-60 items-center justify-center rounded-full border-[16px] border-indigo-500 shadow-inner sm:h-72 sm:w-72">
               <div>
