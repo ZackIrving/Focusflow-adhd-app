@@ -1,51 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabaseClient'
-
-const starterTasks = [
-  {
-    title: 'Complete 1 A+ practice quiz',
-    category: 'A+ Study',
-    energy: 'Medium',
-    time: '20 min',
-    reward: 20,
-    done: false,
-  },
-  {
-    title: 'Update GitHub homelab README',
-    category: 'Homelab',
-    energy: 'Low',
-    time: '15 min',
-    reward: 15,
-    done: false,
-  },
-  {
-    title: 'Apply to 1 remote help desk job',
-    category: 'Career',
-    energy: 'Medium',
-    time: '25 min',
-    reward: 25,
-    done: false,
-  },
-  {
-    title: 'Write 3 TikTok hooks for recovery brand',
-    category: 'Shopify Brand',
-    energy: 'Creative',
-    time: '15 min',
-    reward: 20,
-    done: false,
-  },
-]
-
-const appModes = ['Today', 'Brain Dump', 'Focus Timer', 'Progress']
-
-const emptyTaskForm = {
-  title: '',
-  category: 'Personal',
-  energy: 'Low',
-  time: '15 min',
-  reward: 10,
-  done: false,
-}
+import { appModes, emptyTaskForm, starterTasks } from './constants/appData'
+import AuthScreen from './components/AuthScreen'
+import ReminderBanner from './components/ReminderBanner'
+import Header from './components/Header'
+import NavigationTabs from './components/NavigationTabs'
+import DailyStats from './components/DailyStats'
+import CustomTaskForm from './components/CustomTaskForm'
+import TaskCard from './components/TaskCard'
 
 export default function ADHDProductivityApp() {
   const [user, setUser] = useState(null)
@@ -360,8 +322,17 @@ export default function ADHDProductivityApp() {
 
   async function addTask(task) {
     if (!user) {
-      setSyncStatus('Sign in before adding tasks.')
-      return
+      return (
+        <AuthScreen
+          authEmail={authEmail}
+          setAuthEmail={setAuthEmail}
+          authPassword={authPassword}
+          setAuthPassword={setAuthPassword}
+          authStatus={authStatus}
+          signIn={signIn}
+          signUp={signUp}
+        />
+      )
     }
 
     setSyncStatus('Saving...')
@@ -585,73 +556,25 @@ export default function ADHDProductivityApp() {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 lg:py-8">
-        <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl sm:p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="mb-2 inline-flex rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-700">
-                Logged in as {user.email}
-              </p>
-              <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">
-                FocusFlow ADHD Productivity
-              </h1>
-              <p className="mt-3 max-w-2xl text-base text-slate-600 sm:text-lg">
-                One productivity system that syncs across your computer and phone. Start a task on desktop, continue on mobile, and keep your momentum visible everywhere.
-              </p>
-              <p className="mt-3 text-sm font-semibold text-indigo-700">{syncStatus}</p>
-              <button
-                onClick={signOut}
-                className="mt-4 rounded-2xl bg-slate-200 px-4 py-2 text-sm font-semibold transition hover:bg-slate-300"
-              >
-                Log Out
-              </button>
-            </div>
+        <Header
+          user={user}
+          signOut={signOut}
+          syncStatus={syncStatus}
+          focusScore={focusScore}
+          totalXP={totalXP}
+          completedTasks={completedTasks}
+          tasks={tasks}
+        />
+        <ReminderBanner
+          reminderBanner={reminderBanner}
+          setReminderBanner={setReminderBanner}
+        />
 
-            <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-2xl bg-indigo-100 p-4 text-center">
-                <p className="text-xs font-semibold text-indigo-700 sm:text-sm">Focus</p>
-                <h2 className="mt-2 text-2xl font-bold sm:text-3xl">{focusScore}%</h2>
-              </div>
-              <div className="rounded-2xl bg-emerald-100 p-4 text-center">
-                <p className="text-xs font-semibold text-emerald-700 sm:text-sm">XP</p>
-                <h2 className="mt-2 text-2xl font-bold sm:text-3xl">{totalXP}</h2>
-              </div>
-              <div className="rounded-2xl bg-amber-100 p-4 text-center">
-                <p className="text-xs font-semibold text-amber-700 sm:text-sm">Tasks</p>
-                <h2 className="mt-2 text-2xl font-bold sm:text-3xl">{completedTasks.length}/{tasks.length}</h2>
-              </div>
-            </div>
-          </div>
-        </header>
-        {reminderBanner && (
-          <div className="my-4 rounded-3xl border border-indigo-200 bg-indigo-50 p-4 shadow">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="font-semibold text-indigo-800">{reminderBanner}</p>
-              <button
-                onClick={() => setReminderBanner('')}
-                className="rounded-xl bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700"
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
-        )}
-
-        <nav className="sticky top-0 z-10 my-4 rounded-3xl border border-slate-200 bg-white/90 p-2 shadow-lg backdrop-blur">
-          <div className="grid grid-cols-4 gap-2">
-            {appModes.map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setActiveMode(mode)}
-                className={`rounded-2xl px-3 py-3 text-sm font-semibold transition sm:text-base ${activeMode === mode
-                  ? 'bg-slate-900 text-white shadow-md'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-              >
-                {mode}
-              </button>
-            ))}
-          </div>
-        </nav>
+        <NavigationTabs
+          appModes={appModes}
+          activeMode={activeMode}
+          setActiveMode={setActiveMode}
+        />
 
         {isLoading && (
           <main className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-lg">
@@ -686,233 +609,30 @@ export default function ADHDProductivityApp() {
                 </div>
 
                 {showTaskForm && (
-                  <form onSubmit={handleCreateCustomTask} className="mt-6 rounded-3xl border border-indigo-100 bg-indigo-50 p-5">
-                    <h3 className="text-xl font-bold">Create a custom task</h3>
-                    <p className="mt-1 text-sm text-slate-600">Make the task specific, small, and easy to start.</p>
-
-                    <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <label className="md:col-span-2">
-                        <span className="text-sm font-semibold text-slate-700">Task title</span>
-                        <input
-                          value={taskForm.title}
-                          onChange={(event) => updateTaskForm('title', event.target.value)}
-                          className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-indigo-200"
-                          placeholder="Example: Study A+ networking for 20 minutes"
-                        />
-                      </label>
-
-                      <label>
-                        <span className="text-sm font-semibold text-slate-700">Category</span>
-                        <input
-                          value={taskForm.category}
-                          onChange={(event) => updateTaskForm('category', event.target.value)}
-                          className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-indigo-200"
-                          placeholder="A+ Study, Homelab, Career, Shopify"
-                        />
-                      </label>
-
-                      <label>
-                        <span className="text-sm font-semibold text-slate-700">Energy</span>
-                        <select
-                          value={taskForm.energy}
-                          onChange={(event) => updateTaskForm('energy', event.target.value)}
-                          className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-indigo-200"
-                        >
-                          <option>Low</option>
-                          <option>Medium</option>
-                          <option>High</option>
-                          <option>Creative</option>
-                        </select>
-                      </label>
-
-                      <label>
-                        <span className="text-sm font-semibold text-slate-700">Time estimate</span>
-                        <select
-                          value={taskForm.time}
-                          onChange={(event) => updateTaskForm('time', event.target.value)}
-                          className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-indigo-200"
-                        >
-                          <option>5 min</option>
-                          <option>10 min</option>
-                          <option>15 min</option>
-                          <option>20 min</option>
-                          <option>25 min</option>
-                          <option>45 min</option>
-                          <option>60 min</option>
-                        </select>
-                      </label>
-
-                      <label>
-                        <span className="text-sm font-semibold text-slate-700">XP reward</span>
-                        <input
-                          type="number"
-                          min="1"
-                          max="100"
-                          value={taskForm.reward}
-                          onChange={(event) => updateTaskForm('reward', event.target.value)}
-                          className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-indigo-200"
-                        />
-                      </label>
-                    </div>
-
-                    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                      <button
-                        type="submit"
-                        className="rounded-2xl bg-indigo-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:bg-indigo-700"
-                      >
-                        Save Task
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setTaskForm(emptyTaskForm)
-                          setShowTaskForm(false)
-                        }}
-                        className="rounded-2xl bg-slate-200 px-6 py-3 font-semibold transition hover:bg-slate-300"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
+                  <CustomTaskForm
+                    taskForm={taskForm}
+                    updateTaskForm={updateTaskForm}
+                    handleCreateCustomTask={handleCreateCustomTask}
+                    setTaskForm={setTaskForm}
+                    setShowTaskForm={setShowTaskForm}
+                    emptyTaskForm={emptyTaskForm}
+                  />
                 )}
 
                 <div className="mt-6 space-y-4">
                   {tasks.map((task) => (
-                    <div
+                    <TaskCard
                       key={task.id || task.title}
-                      className={`rounded-2xl border p-4 transition sm:p-5 ${task.done
-                        ? 'border-emerald-200 bg-emerald-50'
-                        : 'border-slate-200 bg-white hover:shadow-md'
-                        }`}
-                    >
-                      {editingTaskId === task.id ? (
-                        <div className="rounded-2xl bg-blue-50 p-4">
-                          <h3 className="text-lg font-bold">Edit task</h3>
-                          <p className="mt-1 text-sm text-slate-600">Make changes, then save them to Supabase.</p>
-
-                          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <label className="md:col-span-2">
-                              <span className="text-sm font-semibold text-slate-700">Task title</span>
-                              <input
-                                value={editForm.title}
-                                onChange={(event) => updateEditForm('title', event.target.value)}
-                                className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-blue-200"
-                              />
-                            </label>
-
-                            <label>
-                              <span className="text-sm font-semibold text-slate-700">Category</span>
-                              <input
-                                value={editForm.category}
-                                onChange={(event) => updateEditForm('category', event.target.value)}
-                                className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-blue-200"
-                              />
-                            </label>
-
-                            <label>
-                              <span className="text-sm font-semibold text-slate-700">Energy</span>
-                              <select
-                                value={editForm.energy}
-                                onChange={(event) => updateEditForm('energy', event.target.value)}
-                                className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-blue-200"
-                              >
-                                <option>Low</option>
-                                <option>Medium</option>
-                                <option>High</option>
-                                <option>Creative</option>
-                              </select>
-                            </label>
-
-                            <label>
-                              <span className="text-sm font-semibold text-slate-700">Time estimate</span>
-                              <select
-                                value={editForm.time}
-                                onChange={(event) => updateEditForm('time', event.target.value)}
-                                className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-blue-200"
-                              >
-                                <option>5 min</option>
-                                <option>10 min</option>
-                                <option>15 min</option>
-                                <option>20 min</option>
-                                <option>25 min</option>
-                                <option>45 min</option>
-                                <option>60 min</option>
-                              </select>
-                            </label>
-
-                            <label>
-                              <span className="text-sm font-semibold text-slate-700">XP reward</span>
-                              <input
-                                type="number"
-                                min="1"
-                                max="100"
-                                value={editForm.reward}
-                                onChange={(event) => updateEditForm('reward', event.target.value)}
-                                className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-blue-200"
-                              />
-                            </label>
-                          </div>
-
-                          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-                            <button
-                              onClick={() => saveEditedTask(task)}
-                              className="rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700"
-                            >
-                              Save Edit
-                            </button>
-                            <button
-                              onClick={cancelEditingTask}
-                              className="rounded-xl bg-slate-200 px-4 py-2 font-semibold transition hover:bg-slate-300"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <div className="mb-2 flex flex-wrap gap-2">
-                              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                                {task.category}
-                              </span>
-                              <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
-                                {task.energy} Energy
-                              </span>
-                              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                                {task.time}
-                              </span>
-                            </div>
-                            <h3 className={`text-lg font-semibold ${task.done ? 'line-through text-slate-400' : ''}`}>
-                              {task.title}
-                            </h3>
-                          </div>
-
-                          <div className="flex flex-col gap-2 sm:flex-row">
-                            <button
-                              onClick={() => toggleTask(task)}
-                              className={`rounded-xl px-4 py-2 font-semibold transition ${task.done
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-slate-900 text-white hover:bg-slate-700'
-                                }`}
-                            >
-                              {task.done ? 'Done' : `Start +${task.reward} XP`}
-                            </button>
-                            <button
-                              onClick={() => startEditingTask(task)}
-                              className="rounded-xl bg-blue-100 px-4 py-2 font-semibold text-blue-700 transition hover:bg-blue-200"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => deleteTask(task)}
-                              className="rounded-xl bg-red-100 px-4 py-2 font-semibold text-red-700 transition hover:bg-red-200"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                      task={task}
+                      editingTaskId={editingTaskId}
+                      editForm={editForm}
+                      updateEditForm={updateEditForm}
+                      saveEditedTask={saveEditedTask}
+                      cancelEditingTask={cancelEditingTask}
+                      toggleTask={toggleTask}
+                      startEditingTask={startEditingTask}
+                      deleteTask={deleteTask}
+                    />
                   ))}
                 </div>
               </div>
@@ -944,37 +664,13 @@ export default function ADHDProductivityApp() {
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg sm:p-6">
-                <h2 className="text-2xl font-bold">Today’s Stats</h2>
-                <p className="mt-2 text-slate-500">Quick progress feedback for momentum.</p>
-
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl bg-emerald-100 p-4">
-                    <p className="text-sm font-semibold text-emerald-700">Completed</p>
-                    <h3 className="mt-2 text-3xl font-bold">{completedToday}</h3>
-                  </div>
-
-                  <div className="rounded-2xl bg-indigo-100 p-4">
-                    <p className="text-sm font-semibold text-indigo-700">XP Earned</p>
-                    <h3 className="mt-2 text-3xl font-bold">{totalXP}</h3>
-                  </div>
-
-                  <div className="rounded-2xl bg-amber-100 p-4">
-                    <p className="text-sm font-semibold text-amber-700">Active Tasks</p>
-                    <h3 className="mt-2 text-3xl font-bold">{activeTasks.length}</h3>
-                  </div>
-
-                  <div className="rounded-2xl bg-slate-100 p-4">
-                    <p className="text-sm font-semibold text-slate-700">Focus Minutes</p>
-                    <h3 className="mt-2 text-3xl font-bold">{estimatedFocusMinutes}</h3>
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-2xl bg-slate-100 p-4">
-                  <p className="text-sm font-semibold text-slate-600">Next Recommended Task</p>
-                  <h3 className="mt-2 text-lg font-bold">{nextTask}</h3>
-                </div>
-              </section>
+              <DailyStats
+                completedToday={completedToday}
+                totalXP={totalXP}
+                activeTasks={activeTasks}
+                estimatedFocusMinutes={estimatedFocusMinutes}
+                nextTask={nextTask}
+              />
             </aside>
           </main>
         )}
@@ -1014,7 +710,7 @@ export default function ADHDProductivityApp() {
           <main className="rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-lg sm:p-8">
             <h2 className="text-3xl font-bold">Hyperfocus Timer</h2>
             <p className="mt-2 text-slate-500">Choose a sprint that matches your current energy.</p>
-            
+
             <div className="mt-5">
               <button
                 onClick={requestNotificationPermission}
