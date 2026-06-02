@@ -9,13 +9,30 @@ export default function TaskCard({
   startEditingTask,
   deleteTask,
 }) {
+  function addToGoogleCalendar(task) {
+    const startDate = new Date()
+    const endDate = new Date()
+
+    const minutes = parseInt(task.time) || 30
+    endDate.setMinutes(startDate.getMinutes() + minutes)
+
+    const formatDate = (date) =>
+      date.toISOString().replace(/[-:]|\.\d{3}/g, '')
+
+    const url = new URL('https://calendar.google.com/calendar/render')
+    url.searchParams.set('action', 'TEMPLATE')
+    url.searchParams.set('text', task.title)
+    url.searchParams.set('details', `FocusFlow task: ${task.category}`)
+    url.searchParams.set('dates', `${formatDate(startDate)}/${formatDate(endDate)}`)
+
+    window.open(url.toString(), '_blank')
+  }
   return (
     <div
-      className={`rounded-2xl border p-4 transition sm:p-5 ${
-        task.done
-          ? 'border-emerald-200 bg-emerald-50'
-          : 'border-slate-200 bg-white hover:shadow-md'
-      }`}
+      className={`rounded-2xl border p-4 transition sm:p-5 ${task.done
+        ? 'border-emerald-200 bg-emerald-50'
+        : 'border-slate-200 bg-white hover:shadow-md'
+        }`}
     >
       {editingTaskId === task.id ? (
         <div className="rounded-2xl bg-blue-50 p-4">
@@ -121,9 +138,8 @@ export default function TaskCard({
             </div>
 
             <h3
-              className={`text-lg font-semibold ${
-                task.done ? 'line-through text-slate-400' : ''
-              }`}
+              className={`text-lg font-semibold ${task.done ? 'line-through text-slate-400' : ''
+                }`}
             >
               {task.title}
             </h3>
@@ -132,11 +148,10 @@ export default function TaskCard({
           <div className="flex flex-col gap-2 sm:flex-row">
             <button
               onClick={() => toggleTask(task)}
-              className={`rounded-xl px-4 py-2 font-semibold transition ${
-                task.done
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-slate-900 text-white hover:bg-slate-700'
-              }`}
+              className={`rounded-xl px-4 py-2 font-semibold transition ${task.done
+                ? 'bg-emerald-600 text-white'
+                : 'bg-slate-900 text-white hover:bg-slate-700'
+                }`}
             >
               {task.done ? 'Done' : `Start +${task.reward} XP`}
             </button>
@@ -146,6 +161,13 @@ export default function TaskCard({
               className="rounded-xl bg-blue-100 px-4 py-2 font-semibold text-blue-700 transition hover:bg-blue-200"
             >
               Edit
+            </button>
+
+            <button
+              onClick={() => addToGoogleCalendar(task)}
+              className="rounded-xl bg-purple-100 px-4 py-2 font-semibold text-purple-700 transition hover:bg-purple-200"
+            >
+              Calendar
             </button>
 
             <button
