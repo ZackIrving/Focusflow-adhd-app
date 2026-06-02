@@ -11,63 +11,81 @@ import TaskCard from './components/TaskCard'
 import PanicPanel from './components/PanicPanel'
 import BrainDumpPage from './components/BrainDumpPage'
 import FocusTimerPage from './components/FocusTimerPage'
+import ProgressPage from './components/ProgressPage'
+import { useFocusTimer } from './hooks/useFocusTimer'
+import { useAuth } from './hooks/useAuth'
+import { useTasks } from './hooks/useTasks'
+import { useBrainDump } from './hooks/useBrainDump'
+import { useStreaks } from './hooks/useStreaks'
 
 export default function ADHDProductivityApp() {
-  const [user, setUser] = useState(null)
-  const [authEmail, setAuthEmail] = useState('')
-  const [authPassword, setAuthPassword] = useState('')
-  const [authStatus, setAuthStatus] = useState('Sign in or create an account to use FocusFlow.')
-  const [isAuthLoading, setIsAuthLoading] = useState(true)
-
-  const [tasks, setTasks] = useState([])
+  const {
+    user,
+    authEmail,
+    setAuthEmail,
+    authPassword,
+    setAuthPassword,
+    authStatus,
+    isAuthLoading,
+    signUp,
+    signIn,
+    signOut,
+  } = useAuth()
   const [activeMode, setActiveMode] = useState('Today')
-  const [brainDump, setBrainDump] = useState('')
-  const [timerMinutes, setTimerMinutes] = useState(25)
-  const [timerSeconds, setTimerSeconds] = useState(25 * 60)
-  const [isRunning, setIsRunning] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [syncStatus, setSyncStatus] = useState('Waiting for login...')
-  const [taskForm, setTaskForm] = useState(emptyTaskForm)
-  const [showTaskForm, setShowTaskForm] = useState(false)
-  const [editingTaskId, setEditingTaskId] = useState(null)
-  const [editForm, setEditForm] = useState(emptyTaskForm)
-
-  const [reminderBanner, setReminderBanner] = useState('')
+   const [reminderBanner, setReminderBanner] = useState('')
   const [notificationPermission, setNotificationPermission] = useState(
     'Notification' in window ? Notification.permission : 'unsupported'
   )
-  useEffect(() => {
-    async function getCurrentSession() {
-      const { data, error } = await supabase.auth.getSession()
-
-      if (error) {
-        console.error('Session error:', error)
-        setAuthStatus('Could not check login status.')
-      }
-
-      setUser(data?.session?.user || null)
-      setIsAuthLoading(false)
-    }
-
-    getCurrentSession()
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null)
-    })
-
-    return () => {
-      authListener.subscription.unsubscribe()
-    }
-  }, [])
-
-  useEffect(() => {
-    if (user) {
-      loadTasks(user.id)
-    } else {
-      setTasks([])
-      setSyncStatus('Waiting for login...')
-    }
-  }, [user])
+  const {
+    currentStreak,
+    longestStreak,
+    updateStreak,
+  } = useStreaks(user)
+  const {
+    tasks,
+    isLoading,
+    syncStatus,
+    taskForm,
+    setTaskForm,
+    showTaskForm,
+    setShowTaskForm,
+    editingTaskId,
+    editForm,
+    completedTasks,
+    activeTasks,
+    totalXP,
+    focusScore,
+    completedToday,
+    nextTask,
+    estimatedFocusMinutes,
+    nextTinyStep,
+    updateTaskForm,
+    updateEditForm,
+    startEditingTask,
+    cancelEditingTask,
+    handleCreateCustomTask,
+    toggleTask,
+    addTask,
+    addTinyTask,
+    saveEditedTask,
+    deleteTask,
+    setSyncStatus,
+    setTasks,
+  } = useTasks(user, updateStreak)
+  const {
+    brainDump,
+    setBrainDump,
+    createBreakdown,
+  } = useBrainDump(user, setTasks, setSyncStatus, setActiveMode)
+  const [timerMinutes, setTimerMinutes] = useState(25)
+  const {
+    timerSeconds,
+    isRunning,
+    setIsRunning,
+    selectTimer,
+    resetTimer,
+    formatTimer,
+  } = useFocusTimer(setReminderBanner)
 
   useEffect(() => {
     if (!isRunning || timerSeconds <= 0) return
@@ -95,58 +113,6 @@ export default function ADHDProductivityApp() {
     return () => clearInterval(interval)
   }, [isRunning, timerSeconds])
 
-  async function signUp() {
-    if (!authEmail.trim() || !authPassword.trim()) {
-      setAuthStatus('Enter an email and password first.')
-      return
-    }
-
-    setAuthStatus('Creating account...')
-
-    const { error } = await supabase.auth.signUp({
-      email: authEmail.trim(),
-      password: authPassword,
-    })
-
-    if (error) {
-      console.error('Sign up error:', error)
-      setAuthStatus(error.message)
-      return
-    }
-
-    setAuthStatus('Account created. Check your email if Supabase asks for confirmation, then sign in.')
-  }
-
-  async function signIn() {
-    if (!authEmail.trim() || !authPassword.trim()) {
-      setAuthStatus('Enter an email and password first.')
-      return
-    }
-
-    setAuthStatus('Signing in...')
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email: authEmail.trim(),
-      password: authPassword,
-    })
-
-    if (error) {
-      console.error('Sign in error:', error)
-      setAuthStatus(error.message)
-      return
-    }
-
-    setAuthEmail('')
-    setAuthPassword('')
-    setAuthStatus('Signed in.')
-  }
-
-  async function signOut() {
-    await supabase.auth.signOut()
-    setTasks([])
-    setAuthStatus('Signed out.')
-  }
-
   async function requestNotificationPermission() {
     if (!('Notification' in window)) {
       setReminderBanner('Browser notifications are not supported on this device.')
@@ -164,324 +130,6 @@ export default function ADHDProductivityApp() {
     } else {
       setReminderBanner('Notifications were not enabled.')
     }
-  }
-
-  async function loadTasks(userId) {
-    setIsLoading(true)
-    setSyncStatus('Loading your tasks...')
-
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: true })
-
-    if (error) {
-      console.error('Error loading tasks:', error)
-      setSyncStatus('Could not load your Supabase tasks.')
-      setIsLoading(false)
-      return
-    }
-
-    if (!data || data.length === 0) {
-      const tasksWithUser = starterTasks.map((task) => ({
-        ...task,
-        user_id: userId,
-      }))
-
-      const { data: insertedTasks, error: insertError } = await supabase
-        .from('tasks')
-        .insert(tasksWithUser)
-        .select()
-
-      if (insertError) {
-        console.error('Error creating starter tasks:', insertError)
-        setTasks([])
-        setSyncStatus('Starter tasks could not save to Supabase.')
-      } else {
-        setTasks(insertedTasks)
-        setSyncStatus('Synced with Supabase')
-      }
-    } else {
-      setTasks(data)
-      setSyncStatus('Synced with Supabase')
-    }
-
-    setIsLoading(false)
-  }
-
-  const completedTasks = tasks.filter((task) => task.done)
-  const totalXP = completedTasks.reduce((sum, task) => sum + Number(task.reward || 0), 0)
-  const focusScore = tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0
-  const activeTasks = tasks.filter((task) => !task.done)
-  const completedToday = completedTasks.length
-  const nextTask = activeTasks[0]?.title || 'No active tasks. Nice work.'
-  const estimatedFocusMinutes = completedTasks.reduce((sum, task) => {
-    const minutes = parseInt(task.time)
-    return sum + (isNaN(minutes) ? 0 : minutes)
-  }, 0)
-
-  const nextTinyStep = useMemo(() => {
-    const unfinished = tasks.find((task) => !task.done)
-    if (!unfinished) return 'Celebrate. You cleared your main queue.'
-    return `Start with: ${unfinished.title}`
-  }, [tasks])
-
-  function formatTimer(seconds) {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
-  }
-
-  function selectTimer(minutes) {
-    setTimerMinutes(minutes)
-    setTimerSeconds(minutes * 60)
-    setIsRunning(false)
-  }
-
-  function resetTimer() {
-    setTimerSeconds(timerMinutes * 60)
-    setIsRunning(false)
-  }
-
-  function updateTaskForm(field, value) {
-    setTaskForm((current) => ({
-      ...current,
-      [field]: field === 'reward' ? Number(value) : value,
-    }))
-  }
-
-  function updateEditForm(field, value) {
-    setEditForm((current) => ({
-      ...current,
-      [field]: field === 'reward' ? Number(value) : value,
-    }))
-  }
-
-  function startEditingTask(task) {
-    setEditingTaskId(task.id)
-    setEditForm({
-      title: task.title || '',
-      category: task.category || 'Personal',
-      energy: task.energy || 'Low',
-      time: task.time || '15 min',
-      reward: Number(task.reward || 10),
-      done: Boolean(task.done),
-    })
-  }
-
-  function cancelEditingTask() {
-    setEditingTaskId(null)
-    setEditForm(emptyTaskForm)
-  }
-
-  async function handleCreateCustomTask(event) {
-    event.preventDefault()
-
-    if (!taskForm.title.trim()) {
-      setSyncStatus('Add a task title first.')
-      return
-    }
-
-    await addTask({
-      title: taskForm.title.trim(),
-      category: taskForm.category,
-      energy: taskForm.energy,
-      time: taskForm.time,
-      reward: Number(taskForm.reward || 10),
-      done: false,
-    })
-
-    setTaskForm(emptyTaskForm)
-    setShowTaskForm(false)
-  }
-
-  async function toggleTask(taskToUpdate) {
-    const updatedDoneStatus = !taskToUpdate.done
-
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === taskToUpdate.id ? { ...task, done: updatedDoneStatus } : task
-      )
-    )
-
-    setSyncStatus('Saving...')
-
-    const { error } = await supabase
-      .from('tasks')
-      .update({ done: updatedDoneStatus })
-      .eq('id', taskToUpdate.id)
-      .eq('user_id', user.id)
-
-    if (error) {
-      console.error('Error updating task:', error)
-      setSyncStatus('Save failed. Refresh to reload from Supabase.')
-      return
-    }
-
-    setSyncStatus('Synced with Supabase')
-  }
-
-  async function addTask(task) {
-    if (!user) {
-      return (
-        <AuthScreen
-          authEmail={authEmail}
-          setAuthEmail={setAuthEmail}
-          authPassword={authPassword}
-          setAuthPassword={setAuthPassword}
-          authStatus={authStatus}
-          signIn={signIn}
-          signUp={signUp}
-        />
-      )
-    }
-
-    setSyncStatus('Saving...')
-
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert([{ ...task, user_id: user.id }])
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Error adding task:', error)
-      setSyncStatus('Task could not save to Supabase.')
-      return
-    }
-
-    setTasks((current) => [...current, data])
-    setSyncStatus('Synced with Supabase')
-  }
-
-  async function saveEditedTask(taskToEdit) {
-    if (!editForm.title.trim()) {
-      setSyncStatus('Edited task needs a title.')
-      return
-    }
-
-    const updatedTask = {
-      title: editForm.title.trim(),
-      category: editForm.category.trim() || 'Personal',
-      energy: editForm.energy,
-      time: editForm.time,
-      reward: Number(editForm.reward || 10),
-    }
-
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === taskToEdit.id ? { ...task, ...updatedTask } : task
-      )
-    )
-
-    setSyncStatus('Saving edit...')
-
-    const { error } = await supabase
-      .from('tasks')
-      .update(updatedTask)
-      .eq('id', taskToEdit.id)
-      .eq('user_id', user.id)
-
-    if (error) {
-      console.error('Error editing task:', error)
-      setSyncStatus('Edit failed. Refresh to reload from Supabase.')
-      return
-    }
-
-    setEditingTaskId(null)
-    setEditForm(emptyTaskForm)
-    setSyncStatus('Synced with Supabase')
-  }
-
-  async function deleteTask(taskToDelete) {
-    const confirmed = window.confirm(`Delete this task?\n\n${taskToDelete.title}`)
-    if (!confirmed) return
-
-    setTasks((current) => current.filter((task) => task.id !== taskToDelete.id))
-    setSyncStatus('Deleting...')
-
-    const { error } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('id', taskToDelete.id)
-      .eq('user_id', user.id)
-
-    if (error) {
-      console.error('Error deleting task:', error)
-      setSyncStatus('Delete failed. Refresh to reload from Supabase.')
-      return
-    }
-
-    setSyncStatus('Synced with Supabase')
-  }
-
-  function addTinyTask() {
-    addTask({
-      title: 'Do a 5-minute reset task',
-      category: 'Momentum',
-      energy: 'Low',
-      time: '5 min',
-      reward: 10,
-      done: false,
-    })
-  }
-
-  async function createBreakdown() {
-    if (!brainDump.trim()) return
-    if (!user) {
-      setSyncStatus('Sign in before saving brain dump tasks.')
-      return
-    }
-
-    const simplified = [
-      {
-        title: 'Pick the easiest starting point',
-        category: 'Brain Dump',
-        energy: 'Low',
-        time: '5 min',
-        reward: 10,
-        done: false,
-        user_id: user.id,
-      },
-      {
-        title: 'Turn one thought into one task',
-        category: 'Brain Dump',
-        energy: 'Low',
-        time: '10 min',
-        reward: 15,
-        done: false,
-        user_id: user.id,
-      },
-      {
-        title: 'Schedule the next action only',
-        category: 'Planning',
-        energy: 'Low',
-        time: '5 min',
-        reward: 10,
-        done: false,
-        user_id: user.id,
-      },
-    ]
-
-    setSyncStatus('Saving brain dump tasks...')
-
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert(simplified)
-      .select()
-
-    if (error) {
-      console.error('Error saving brain dump tasks:', error)
-      setSyncStatus('Brain dump tasks could not save to Supabase.')
-      return
-    }
-
-    setTasks((current) => [...data, ...current])
-    setBrainDump('')
-    setActiveMode('Today')
-    setSyncStatus('Synced with Supabase')
   }
 
   if (isAuthLoading) {
@@ -680,24 +328,12 @@ export default function ADHDProductivityApp() {
         )}
 
         {!isLoading && activeMode === 'Progress' && (
-          <main className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {[
-              { label: 'Total Tasks Completed', progress: focusScore },
-              { label: 'XP Earned', progress: Math.min(totalXP, 100) },
-              { label: 'Brain Dump Progress', progress: tasks.filter((task) => task.category === 'Brain Dump' && task.done).length * 25 },
-              { label: 'Momentum', progress: Math.min(completedTasks.length * 20, 100) },
-            ].map((item) => (
-              <section key={item.label} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
-                <div className="mb-3 flex justify-between">
-                  <h3 className="text-xl font-bold">{item.label}</h3>
-                  <span className="font-semibold text-slate-500">{item.progress}%</span>
-                </div>
-                <div className="h-4 overflow-hidden rounded-full bg-slate-200">
-                  <div className="h-full rounded-full bg-indigo-500" style={{ width: `${Math.min(item.progress, 100)}%` }} />
-                </div>
-              </section>
-            ))}
-          </main>
+          <ProgressPage
+            focusScore={focusScore}
+            totalXP={totalXP}
+            tasks={tasks}
+            completedTasks={completedTasks}
+          />
         )}
       </div>
     </div>
