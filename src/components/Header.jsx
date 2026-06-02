@@ -6,6 +6,8 @@ export default function Header({
   totalXP,
   completedTasks,
   tasks,
+  currentStreak,
+  longestStreak,
 }) {
   return (
     <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl sm:p-8">
@@ -37,7 +39,7 @@ export default function Header({
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           <div className="rounded-2xl bg-indigo-100 p-4 text-center">
             <p className="text-xs font-semibold text-indigo-700 sm:text-sm">
               Focus
@@ -57,18 +59,38 @@ export default function Header({
               {totalXP}
             </h2>
           </div>
+          
+          <div className="rounded-2xl bg-orange-100 p-4 text-center">
+          <p className="text-xs font-semibold text-orange-700 sm:text-sm">
+            Streak
+          </p>
 
-          <div className="rounded-2xl bg-amber-100 p-4 text-center">
-            <p className="text-xs font-semibold text-amber-700 sm:text-sm">
-              Tasks
-            </p>
+          <h2 className="mt-2 text-2xl font-bold sm:text-3xl">
+            {currentStreak}
+          </h2>
+        </div>
 
-            <h2 className="mt-2 text-2xl font-bold sm:text-3xl">
-              {completedTasks.length}/{tasks.length}
-            </h2>
-          </div>
+        <div className="rounded-2xl bg-purple-100 p-4 text-center">
+          <p className="text-xs font-semibold text-purple-700 sm:text-sm">
+            Best
+          </p>
+
+          <h2 className="mt-2 text-2xl font-bold sm:text-3xl">
+            {longestStreak}
+          </h2>
+        </div>
+
+        <div className="rounded-2xl bg-amber-100 p-4 text-center">
+          <p className="text-xs font-semibold text-amber-700 sm:text-sm">
+            Tasks
+          </p>
+
+          <h2 className="mt-2 text-2xl font-bold sm:text-3xl">
+            {completedTasks.length}/{tasks.length}
+          </h2>
         </div>
       </div>
-    </header>
+    </div>
+    </header >
   )
 }
