@@ -19,6 +19,7 @@ import { useBrainDump } from './hooks/useBrainDump'
 import { useStreaks } from './hooks/useStreaks'
 import { useHabits } from './hooks/useHabits'
 import HabitTracker from './components/HabitTracker'
+import AITaskCoach from './components/AITaskCoach'
 
 export default function ADHDProductivityApp() {
   const {
@@ -322,6 +323,11 @@ export default function ADHDProductivityApp() {
                 addHabit={addHabit}
                 toggleHabit={toggleHabit}
                 deleteHabit={deleteHabit}
+              />
+              
+              <AITaskCoach
+                tasks={tasks}
+                habits={habits}
               />
             </aside>
           </main>
