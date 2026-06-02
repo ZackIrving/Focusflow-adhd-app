@@ -8,7 +8,6 @@ import NavigationTabs from './components/NavigationTabs'
 import DailyStats from './components/DailyStats'
 import CustomTaskForm from './components/CustomTaskForm'
 import TaskCard from './components/TaskCard'
-import PanicPanel from './components/PanicPanel'
 import BrainDumpPage from './components/BrainDumpPage'
 import FocusTimerPage from './components/FocusTimerPage'
 import ProgressPage from './components/ProgressPage'
@@ -302,11 +301,6 @@ export default function ADHDProductivityApp() {
             </section>
 
             <aside className="space-y-6">
-              <PanicPanel
-                nextTinyStep={nextTinyStep}
-                addTinyTask={addTinyTask}
-              />
-
               <DailyStats
                 completedToday={completedToday}
                 totalXP={totalXP}
@@ -324,7 +318,7 @@ export default function ADHDProductivityApp() {
                 toggleHabit={toggleHabit}
                 deleteHabit={deleteHabit}
               />
-              
+
               <AITaskCoach
                 tasks={tasks}
                 habits={habits}
