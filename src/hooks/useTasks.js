@@ -138,7 +138,6 @@ export function useTasks(user, updateStreak) {
     }
 
     async function toggleTask(taskToUpdate) {
-        console.log('NEW TOGGLE TASK FUNCTION LOADED')
         if (!user) return
 
         const updatedDoneStatus = !taskToUpdate.done
@@ -163,13 +162,7 @@ export function useTasks(user, updateStreak) {
             return
         }
 
-        console.log('TASK TOGGLED', {
-            updatedDoneStatus,
-            hasUpdateStreak: Boolean(updateStreak),
-        })
-
         if (updatedDoneStatus && updateStreak) {
-            console.log('STREAK FUNCTION IS BEING CALLED')
             await updateStreak()
         }
         setSyncStatus('Synced with Supabase')

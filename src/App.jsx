@@ -17,6 +17,8 @@ import { useAuth } from './hooks/useAuth'
 import { useTasks } from './hooks/useTasks'
 import { useBrainDump } from './hooks/useBrainDump'
 import { useStreaks } from './hooks/useStreaks'
+import { useHabits } from './hooks/useHabits'
+import HabitTracker from './components/HabitTracker'
 
 export default function ADHDProductivityApp() {
   const {
@@ -32,7 +34,7 @@ export default function ADHDProductivityApp() {
     signOut,
   } = useAuth()
   const [activeMode, setActiveMode] = useState('Today')
-   const [reminderBanner, setReminderBanner] = useState('')
+  const [reminderBanner, setReminderBanner] = useState('')
   const [notificationPermission, setNotificationPermission] = useState(
     'Notification' in window ? Notification.permission : 'unsupported'
   )
@@ -41,6 +43,15 @@ export default function ADHDProductivityApp() {
     longestStreak,
     updateStreak,
   } = useStreaks(user)
+  const [timerMinutes, setTimerMinutes] = useState(25)
+  const {
+    timerSeconds,
+    isRunning,
+    setIsRunning,
+    selectTimer,
+    resetTimer,
+    formatTimer,
+  } = useFocusTimer(setReminderBanner)
   const {
     tasks,
     isLoading,
@@ -73,19 +84,19 @@ export default function ADHDProductivityApp() {
     setTasks,
   } = useTasks(user, updateStreak)
   const {
+    habits,
+    habitName,
+    setHabitName,
+    habitStatus,
+    addHabit,
+    toggleHabit,
+    deleteHabit,
+  } = useHabits(user)
+  const {
     brainDump,
     setBrainDump,
     createBreakdown,
   } = useBrainDump(user, setTasks, setSyncStatus, setActiveMode)
-  const [timerMinutes, setTimerMinutes] = useState(25)
-  const {
-    timerSeconds,
-    isRunning,
-    setIsRunning,
-    selectTimer,
-    resetTimer,
-    formatTimer,
-  } = useFocusTimer(setReminderBanner)
 
   useEffect(() => {
     if (!isRunning || timerSeconds <= 0) return
@@ -301,6 +312,16 @@ export default function ADHDProductivityApp() {
                 activeTasks={activeTasks}
                 estimatedFocusMinutes={estimatedFocusMinutes}
                 nextTask={nextTask}
+              />
+
+              <HabitTracker
+                habits={habits}
+                habitName={habitName}
+                setHabitName={setHabitName}
+                habitStatus={habitStatus}
+                addHabit={addHabit}
+                toggleHabit={toggleHabit}
+                deleteHabit={deleteHabit}
               />
             </aside>
           </main>
