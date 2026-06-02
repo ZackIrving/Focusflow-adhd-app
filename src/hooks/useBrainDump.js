@@ -12,41 +12,26 @@ export function useBrainDump(user, setTasks, setSyncStatus, setActiveMode) {
       return
     }
 
-    const simplified = [
-      {
-        title: 'Pick the easiest starting point',
-        category: 'Brain Dump',
-        energy: 'Low',
-        time: '5 min',
-        reward: 10,
-        done: false,
-        user_id: user.id,
-      },
-      {
-        title: 'Turn one thought into one task',
-        category: 'Brain Dump',
-        energy: 'Low',
-        time: '10 min',
-        reward: 15,
-        done: false,
-        user_id: user.id,
-      },
-      {
-        title: 'Schedule the next action only',
-        category: 'Planning',
-        energy: 'Low',
-        time: '5 min',
-        reward: 10,
-        done: false,
-        user_id: user.id,
-      },
-    ]
+    const lines = brainDump
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
 
-    setSyncStatus('Saving brain dump tasks...')
+    const tasksFromBrainDump = lines.map((line) => ({
+      title: line,
+      category: 'Brain Dump',
+      energy: 'Low',
+      time: '10 min',
+      reward: 10,
+      done: false,
+      user_id: user.id,
+    }))
+
+    setSyncStatus('Turning brain dump into tasks...')
 
     const { data, error } = await supabase
       .from('tasks')
-      .insert(simplified)
+      .insert(tasksFromBrainDump)
       .select()
 
     if (error) {
@@ -58,7 +43,7 @@ export function useBrainDump(user, setTasks, setSyncStatus, setActiveMode) {
     setTasks((current) => [...data, ...current])
     setBrainDump('')
     setActiveMode('Today')
-    setSyncStatus('Synced with Supabase')
+    setSyncStatus('Brain dump tasks saved.')
   }
 
   return {
