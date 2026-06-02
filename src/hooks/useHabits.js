@@ -27,7 +27,15 @@ export function useHabits(user) {
       return
     }
 
-    setHabits(data || [])
+    const today = new Date().toISOString().split('T')[0]
+
+    const resetHabits = (data || []).map((habit) => ({
+      ...habit,
+      completed_today:
+        habit.last_completed_date === today ? habit.completed_today : false,
+    }))
+
+    setHabits(resetHabits)
   }
 
   async function addHabit(event) {
@@ -75,7 +83,12 @@ export function useHabits(user) {
 
     const { error } = await supabase
       .from('habits')
-      .update({ completed_today: updatedStatus })
+      .update({
+        completed_today: updatedStatus,
+        last_completed_date: updatedStatus
+          ? new Date().toISOString().split('T')[0]
+          : null,
+      })
       .eq('id', habit.id)
       .eq('user_id', user.id)
 
