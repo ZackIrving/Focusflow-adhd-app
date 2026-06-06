@@ -32,7 +32,16 @@ export function useTasks(user, updateStreak) {
 
         if (error) {
             console.error('Error loading tasks:', error)
-            setSyncStatus('Could not load your Supabase tasks.')
+
+            const cachedTasks = localStorage.getItem('focusflow_tasks')
+
+            if (cachedTasks) {
+                setTasks(JSON.parse(cachedTasks))
+                setSyncStatus('Offline mode: showing last saved tasks.')
+            } else {
+                setSyncStatus('Could not load your Supabase tasks.')
+            }
+
             setIsLoading(false)
             return
         }
@@ -53,7 +62,8 @@ export function useTasks(user, updateStreak) {
                 setTasks([])
                 setSyncStatus('Starter tasks could not save to Supabase.')
             } else {
-                setTasks(insertedTasks)
+                setTasks(data)
+                localStorage.setItem('focusflow_tasks', JSON.stringify(data))
                 setSyncStatus('Synced with Supabase')
             }
         } else {

@@ -43,32 +43,37 @@ export default function HabitTracker({
           habits.map((habit) => (
             <div
               key={habit.id}
-              className={`rounded-2xl border p-4 ${
-                habit.completed_today
+              className={`rounded-2xl border p-4 ${habit.completed_today
                   ? 'border-emerald-200 bg-emerald-50'
                   : 'border-slate-200 bg-white'
-              }`}
+                }`}
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3
-                    className={`font-semibold ${
-                      habit.completed_today ? 'line-through text-slate-400' : ''
-                    }`}
+                    className={`font-semibold ${habit.completed_today ? 'line-through text-slate-400' : ''
+                      }`}
                   >
                     {habit.name}
                   </h3>
-                  <p className="text-sm text-slate-500">Frequency: {habit.frequency}</p>
+                  <p className="text-sm text-slate-500">
+                    Frequency: {habit.frequency}
+                  </p>
+
+                  {habit.last_completed_date && (
+                    <p className="text-sm text-slate-500">
+                      Last completed: {habit.last_completed_date}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex gap-2">
                   <button
                     onClick={() => toggleHabit(habit)}
-                    className={`rounded-xl px-4 py-2 font-semibold ${
-                      habit.completed_today
+                    className={`rounded-xl px-4 py-2 font-semibold ${habit.completed_today
                         ? 'bg-emerald-600 text-white'
                         : 'bg-slate-900 text-white'
-                    }`}
+                      }`}
                   >
                     {habit.completed_today ? 'Done' : 'Mark Done'}
                   </button>
