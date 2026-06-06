@@ -36,9 +36,24 @@ export default function ADHDProductivityApp() {
   } = useAuth()
   const [activeMode, setActiveMode] = useState('Today')
   const [reminderBanner, setReminderBanner] = useState('')
+  const [dailyPlanningReminder, setDailyPlanningReminder] = useState('')
   const [notificationPermission, setNotificationPermission] = useState(
     'Notification' in window ? Notification.permission : 'unsupported'
   )
+
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]
+    const lastReminder = localStorage.getItem('focusflow_daily_planning')
+
+    if (lastReminder !== today) {
+      setDailyPlanningReminder(
+        '📋 Take 2 minutes to set your Top 3 priorities for today.'
+      )
+
+      localStorage.setItem('focusflow_daily_planning', today)
+    }
+  }, [])
+
   const {
     currentStreak,
     longestStreak,
@@ -232,6 +247,12 @@ export default function ADHDProductivityApp() {
           reminderBanner={reminderBanner}
           setReminderBanner={setReminderBanner}
         />
+        
+        {dailyPlanningReminder && (
+          <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-indigo-800">
+            {dailyPlanningReminder}
+          </div>
+        )}
 
         <NavigationTabs
           appModes={appModes}
