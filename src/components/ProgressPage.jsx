@@ -21,6 +21,22 @@ export default function ProgressPage({
     { label: 'Total XP', value: totalXP },
   ]
 
+  const taskCompletionRate =
+    tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0
+
+  const habitCompletionRate =
+    habits.length > 0 ? Math.round((completedHabits.length / habits.length) * 100) : 0
+
+  const activeTaskRate =
+    tasks.length > 0 ? Math.round((activeTasks.length / tasks.length) * 100) : 0
+
+  const chartItems = [
+    { label: 'Tasks Completed', value: taskCompletionRate },
+    { label: 'Habits Completed', value: habitCompletionRate },
+    { label: 'Active Tasks Remaining', value: activeTaskRate },
+    { label: 'Focus Score', value: focusScore },
+  ]
+
   return (
     <main className="space-y-6">
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
@@ -40,6 +56,30 @@ export default function ProgressPage({
             <h3 className="mt-2 text-4xl font-bold">{item.value}</h3>
           </div>
         ))}
+      </section>
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
+        <h2 className="text-2xl font-bold">Progress Charts</h2>
+        <p className="mt-2 text-slate-500">
+          Visual breakdown of your current productivity momentum.
+        </p>
+
+        <div className="mt-6 space-y-5">
+          {chartItems.map((item) => (
+            <div key={item.label}>
+              <div className="mb-2 flex justify-between">
+                <p className="font-semibold">{item.label}</p>
+                <p className="font-semibold text-slate-500">{item.value}%</p>
+              </div>
+
+              <div className="h-4 overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className="h-full rounded-full bg-indigo-500"
+                  style={{ width: `${Math.min(item.value, 100)}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
     </main>
   )
