@@ -23,7 +23,16 @@ export function useHabits(user) {
 
     if (error) {
       console.error('Error loading habits:', error)
-      setHabitStatus('Could not load habits.')
+
+      const cachedHabits = localStorage.getItem('focusflow_habits')
+
+      if (cachedHabits) {
+        setHabits(JSON.parse(cachedHabits))
+        setHabitStatus('Offline mode: showing last saved habits.')
+      } else {
+        setHabitStatus('Could not load habits.')
+      }
+
       return
     }
 
@@ -36,6 +45,7 @@ export function useHabits(user) {
     }))
 
     setHabits(resetHabits)
+    localStorage.setItem('focusflow_habits', JSON.stringify(resetHabits))
   }
 
   async function addHabit(event) {

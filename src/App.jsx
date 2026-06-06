@@ -359,6 +359,10 @@ export default function ADHDProductivityApp() {
             totalXP={totalXP}
             tasks={tasks}
             completedTasks={completedTasks}
+            activeTasks={activeTasks}
+            habits={habits}
+            currentStreak={currentStreak}
+            longestStreak={longestStreak}
           />
         )}
       </div>
