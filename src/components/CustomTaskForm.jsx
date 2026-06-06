@@ -79,6 +79,37 @@ export default function CustomTaskForm({
             className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-indigo-200"
           />
         </label>
+        <label className="flex items-center gap-3 rounded-2xl bg-white p-3">
+          <input
+            type="checkbox"
+            checked={taskForm.recurring}
+            onChange={(event) =>
+              updateTaskForm('recurring', event.target.checked)
+            }
+          />
+          <span className="text-sm font-semibold text-slate-700">
+            Make this a recurring task
+          </span>
+        </label>
+
+        {taskForm.recurring && (
+          <label>
+            <span className="text-sm font-semibold text-slate-700">
+              Recurrence
+            </span>
+            <select
+              value={taskForm.recurrence}
+              onChange={(event) =>
+                updateTaskForm('recurrence', event.target.value)
+              }
+              className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-indigo-200"
+            >
+              <option value="">Choose recurrence</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+            </select>
+          </label>
+        )}
       </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">

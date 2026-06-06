@@ -118,6 +118,8 @@ export function useTasks(user, updateStreak) {
             time: task.time || '15 min',
             reward: Number(task.reward || 10),
             done: Boolean(task.done),
+            recurring: Boolean(task.recurring),
+            recurrence: task.recurrence || '',
         })
     }
 
@@ -141,6 +143,9 @@ export function useTasks(user, updateStreak) {
             time: taskForm.time,
             reward: Number(taskForm.reward || 10),
             done: false,
+            recurring: Boolean(taskForm.recurring),
+            recurrence: taskForm.recurring ? taskForm.recurrence || 'daily' : null,
+            last_generated_date: null,
         })
 
         setTaskForm(emptyTaskForm)
@@ -216,6 +221,8 @@ export function useTasks(user, updateStreak) {
             energy: editForm.energy,
             time: editForm.time,
             reward: Number(editForm.reward || 10),
+            recurring: Boolean(editForm.recurring),
+            recurrence: editForm.recurring ? editForm.recurrence || 'daily' : null,
         }
 
         setTasks((current) =>

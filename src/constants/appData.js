@@ -48,4 +48,6 @@ export const emptyTaskForm = {
   time: '15 min',
   reward: 10,
   done: false,
+  recurring: false,
+  recurrence: '',
 }

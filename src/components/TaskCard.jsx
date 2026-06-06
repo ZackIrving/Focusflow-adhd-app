@@ -102,6 +102,37 @@ export default function TaskCard({
                 className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-blue-200"
               />
             </label>
+            <label className="flex items-center gap-3 rounded-2xl bg-white p-3">
+              <input
+                type="checkbox"
+                checked={editForm.recurring || false}
+                onChange={(event) =>
+                  updateEditForm('recurring', event.target.checked)
+                }
+              />
+              <span className="text-sm font-semibold text-slate-700">
+                Make this a recurring task
+              </span>
+            </label>
+
+            {editForm.recurring && (
+              <label>
+                <span className="text-sm font-semibold text-slate-700">
+                  Recurrence
+                </span>
+                <select
+                  value={editForm.recurrence || ''}
+                  onChange={(event) =>
+                    updateEditForm('recurrence', event.target.value)
+                  }
+                  className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-blue-200"
+                >
+                  <option value="">Choose recurrence</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                </select>
+              </label>
+            )}
           </div>
 
           <div className="mt-5 flex flex-col gap-2 sm:flex-row">
@@ -135,6 +166,12 @@ export default function TaskCard({
               <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
                 {task.time}
               </span>
+
+              {task.recurring && task.recurrence && (
+                <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+                  🔁 {task.recurrence}
+                </span>
+              )}
             </div>
 
             <h3
