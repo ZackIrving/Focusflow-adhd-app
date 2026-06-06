@@ -33,7 +33,13 @@ export const starterTasks = [
   },
 ]
 
-export const appModes = ['Today', 'Brain Dump', 'Focus Timer', 'Progress']
+export const appModes = [
+  'Today',
+  'Daily Plan',
+  'Brain Dump',
+  'Focus Timer',
+  'Progress',
+]
 
 export const emptyTaskForm = {
   title: '',

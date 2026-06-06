@@ -19,6 +19,7 @@ import { useStreaks } from './hooks/useStreaks'
 import { useHabits } from './hooks/useHabits'
 import HabitTracker from './components/HabitTracker'
 import AITaskCoach from './components/AITaskCoach'
+import DailyPlanPage from './components/DailyPlanPage'
 
 export default function ADHDProductivityApp() {
   const {
@@ -325,6 +326,10 @@ export default function ADHDProductivityApp() {
               />
             </aside>
           </main>
+        )}
+
+        {!isLoading && activeMode === 'Daily Plan' && (
+          <DailyPlanPage />
         )}
 
         {!isLoading && activeMode === 'Brain Dump' && (
