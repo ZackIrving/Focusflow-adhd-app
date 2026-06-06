@@ -20,6 +20,7 @@ import { useHabits } from './hooks/useHabits'
 import HabitTracker from './components/HabitTracker'
 import AITaskCoach from './components/AITaskCoach'
 import DailyPlanPage from './components/DailyPlanPage'
+import { useDailyPlan } from './hooks/useDailyPlan'
 
 export default function ADHDProductivityApp() {
   const {
@@ -34,6 +35,12 @@ export default function ADHDProductivityApp() {
     signIn,
     signOut,
   } = useAuth()
+  const {
+    dailyPlan,
+    dailyPlanStatus,
+    updateDailyPlan,
+    saveDailyPlan,
+  } = useDailyPlan(user)
   const [activeMode, setActiveMode] = useState('Today')
   const [reminderBanner, setReminderBanner] = useState('')
   const [dailyPlanningReminder, setDailyPlanningReminder] = useState('')
@@ -247,13 +254,12 @@ export default function ADHDProductivityApp() {
           reminderBanner={reminderBanner}
           setReminderBanner={setReminderBanner}
         />
-        
+
         {dailyPlanningReminder && (
           <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-indigo-800">
             {dailyPlanningReminder}
           </div>
         )}
-
         <NavigationTabs
           appModes={appModes}
           activeMode={activeMode}
@@ -350,7 +356,12 @@ export default function ADHDProductivityApp() {
         )}
 
         {!isLoading && activeMode === 'Daily Plan' && (
-          <DailyPlanPage />
+          <DailyPlanPage
+            dailyPlan={dailyPlan}
+            dailyPlanStatus={dailyPlanStatus}
+            updateDailyPlan={updateDailyPlan}
+            saveDailyPlan={saveDailyPlan}
+          />
         )}
 
         {!isLoading && activeMode === 'Brain Dump' && (
