@@ -150,6 +150,7 @@ export function useTasks(user, updateStreak) {
             reminder_time: taskForm.reminder_enabled
                 ? taskForm.reminder_time || null
                 : null,
+            notification_sent: false,
         })
 
         setTaskForm(emptyTaskForm)

@@ -153,11 +153,12 @@ export default function ADHDProductivityApp() {
     const interval = setInterval(() => {
       const now = new Date().getTime()
 
-      tasks.forEach((task) => {
+      tasks.forEach(async (task) => {
         if (
           task.reminder_enabled &&
           task.reminder_time &&
-          !task.done
+          !task.done &&
+          !task.notification_sent
         ) {
           const reminderTime = new Date(task.reminder_time).getTime()
           const difference = reminderTime - now
@@ -174,6 +175,19 @@ export default function ADHDProductivityApp() {
                 icon: '/icon-192.png',
               })
             }
+
+            await supabase
+              .from('tasks')
+              .update({ notification_sent: true })
+              .eq('id', task.id)
+
+            setTasks((current) =>
+              current.map((item) =>
+                item.id === task.id
+                  ? { ...item, notification_sent: true }
+                  : item
+              )
+            )
           }
         }
       })
