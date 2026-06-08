@@ -110,6 +110,35 @@ export default function CustomTaskForm({
             </select>
           </label>
         )}
+        <label className="flex items-center gap-3 rounded-2xl bg-white p-3">
+          <input
+            type="checkbox"
+            checked={taskForm.reminder_enabled}
+            onChange={(event) =>
+              updateTaskForm('reminder_enabled', event.target.checked)
+            }
+          />
+          <span className="text-sm font-semibold text-slate-700">
+            Enable reminder
+          </span>
+        </label>
+
+        {taskForm.reminder_enabled && (
+          <label>
+            <span className="text-sm font-semibold text-slate-700">
+              Reminder Time
+            </span>
+
+            <input
+              type="datetime-local"
+              value={taskForm.reminder_time}
+              onChange={(event) =>
+                updateTaskForm('reminder_time', event.target.value)
+              }
+              className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-3 focus:outline-none focus:ring-4 focus:ring-indigo-200"
+            />
+          </label>
+        )}
       </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">

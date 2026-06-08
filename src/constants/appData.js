@@ -50,4 +50,6 @@ export const emptyTaskForm = {
   done: false,
   recurring: false,
   recurrence: '',
+  reminder_enabled: false,
+  reminder_time: '',
 }

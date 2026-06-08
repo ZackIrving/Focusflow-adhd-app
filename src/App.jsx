@@ -147,6 +147,40 @@ export default function ADHDProductivityApp() {
     return () => clearInterval(interval)
   }, [isRunning, timerSeconds])
 
+  useEffect(() => {
+    if (!tasks.length) return
+
+    const interval = setInterval(() => {
+      const now = new Date().getTime()
+
+      tasks.forEach((task) => {
+        if (
+          task.reminder_enabled &&
+          task.reminder_time &&
+          !task.done
+        ) {
+          const reminderTime = new Date(task.reminder_time).getTime()
+          const difference = reminderTime - now
+
+          if (difference <= 60000 && difference > -120000) {
+            setReminderBanner(`Reminder: Time to work on ${task.title}`)
+
+            if (
+              'Notification' in window &&
+              Notification.permission === 'granted'
+            ) {
+              new Notification('FocusFlow Reminder', {
+                body: `Time to work on: ${task.title}`,
+                icon: '/icon-192.png',
+              })
+            }
+          }
+        }
+      })
+    }, 10000)
+
+    return () => clearInterval(interval)
+  }, [tasks])
   async function requestNotificationPermission() {
     if (!('Notification' in window)) {
       setReminderBanner('Browser notifications are not supported on this device.')

@@ -146,6 +146,10 @@ export function useTasks(user, updateStreak) {
             recurring: Boolean(taskForm.recurring),
             recurrence: taskForm.recurring ? taskForm.recurrence || 'daily' : null,
             last_generated_date: null,
+            reminder_enabled: Boolean(taskForm.reminder_enabled),
+            reminder_time: taskForm.reminder_enabled
+                ? taskForm.reminder_time || null
+                : null,
         })
 
         setTaskForm(emptyTaskForm)
