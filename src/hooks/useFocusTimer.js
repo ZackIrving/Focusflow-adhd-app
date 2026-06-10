@@ -7,6 +7,22 @@ export function useFocusTimer(setReminderBanner, user) {
   const [selectedDuration, setSelectedDuration] = useState(25)
   const [completedPomodoros, setCompletedPomodoros] = useState(0)
 
+  async function loadPomodoroStats() {
+    if (!user) return
+
+    const { data, error } = await supabase
+      .from('pomodoro_sessions')
+      .select('id')
+      .eq('user_id', user.id)
+
+    if (error) {
+      console.error('Error loading pomodoro stats:', error)
+      return
+    }
+
+    setCompletedPomodoros(data.length)
+  }
+
   async function savePomodoroSession(duration) {
     if (!user) return
 
@@ -25,6 +41,12 @@ export function useFocusTimer(setReminderBanner, user) {
 
     setCompletedPomodoros((current) => current + 1)
   }
+
+  useEffect(() => {
+    if (!user) return
+
+    loadPomodoroStats()
+  }, [user])
 
   useEffect(() => {
     if (!isRunning) return
