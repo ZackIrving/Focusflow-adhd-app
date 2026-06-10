@@ -1,8 +1,30 @@
 import { useEffect, useState } from 'react'
+import { supabase } from '../supabaseClient'
 
-export function useFocusTimer(setReminderBanner) {
+export function useFocusTimer(setReminderBanner, user) {
   const [timerSeconds, setTimerSeconds] = useState(1500)
   const [isRunning, setIsRunning] = useState(false)
+  const [selectedDuration, setSelectedDuration] = useState(25)
+  const [completedPomodoros, setCompletedPomodoros] = useState(0)
+
+  async function savePomodoroSession(duration) {
+    if (!user) return
+
+    const { error } = await supabase
+      .from('pomodoro_sessions')
+      .insert({
+        user_id: user.id,
+        duration,
+        completed: true,
+      })
+
+    if (error) {
+      console.error('Error saving pomodoro session:', error)
+      return
+    }
+
+    setCompletedPomodoros((current) => current + 1)
+  }
 
   useEffect(() => {
     if (!isRunning) return
@@ -11,6 +33,8 @@ export function useFocusTimer(setReminderBanner) {
       setTimerSeconds((current) => {
         if (current <= 1) {
           setIsRunning(false)
+
+          savePomodoroSession(selectedDuration)
 
           setReminderBanner(
             'Focus session complete. Take a short break.'
@@ -34,15 +58,16 @@ export function useFocusTimer(setReminderBanner) {
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [isRunning, setReminderBanner])
+  }, [isRunning, selectedDuration, setReminderBanner])
 
   function selectTimer(minutes) {
+    setSelectedDuration(minutes)
     setTimerSeconds(minutes * 60)
     setIsRunning(false)
   }
 
   function resetTimer() {
-    setTimerSeconds(1500)
+    setTimerSeconds(selectedDuration * 60)
     setIsRunning(false)
   }
 
@@ -60,5 +85,6 @@ export function useFocusTimer(setReminderBanner) {
     selectTimer,
     resetTimer,
     formatTimer,
+    completedPomodoros,
   }
 }

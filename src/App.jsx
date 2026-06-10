@@ -74,7 +74,8 @@ export default function ADHDProductivityApp() {
     selectTimer,
     resetTimer,
     formatTimer,
-  } = useFocusTimer(setReminderBanner)
+    completedPomodoros,
+  } = useFocusTimer(setReminderBanner, user)
   const {
     tasks,
     isLoading,
@@ -120,32 +121,6 @@ export default function ADHDProductivityApp() {
     setBrainDump,
     createBreakdown,
   } = useBrainDump(user, setTasks, setSyncStatus, setActiveMode)
-
-  useEffect(() => {
-    if (!isRunning || timerSeconds <= 0) return
-
-    const interval = setInterval(() => {
-      setTimerSeconds((current) => {
-        if (current <= 1) {
-          setIsRunning(false)
-          setReminderBanner('Focus session complete. Take a short break.')
-
-          if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('FocusFlow', {
-              body: 'Focus session complete. Take a short break.',
-              icon: '/icon-192.png',
-            })
-          }
-
-          return 0
-        }
-
-        return current - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [isRunning, timerSeconds])
 
   useEffect(() => {
     if (!tasks.length) return
@@ -430,6 +405,7 @@ export default function ADHDProductivityApp() {
             isRunning={isRunning}
             setIsRunning={setIsRunning}
             resetTimer={resetTimer}
+            completedPomodoros={completedPomodoros}
           />
         )}
 

@@ -161,10 +161,21 @@ export function useTasks(user, updateStreak) {
         if (!user) return
 
         const updatedDoneStatus = !taskToUpdate.done
+        const today = new Date().toISOString().split('T')[0]
+
+        const taskUpdates = {
+            done: updatedDoneStatus,
+        }
+
+        if (updatedDoneStatus && taskToUpdate.recurring === true) {
+            taskUpdates.last_generated_date = today
+        }
 
         setTasks((current) =>
             current.map((task) =>
-                task.id === taskToUpdate.id ? { ...task, done: updatedDoneStatus } : task
+                task.id === taskToUpdate.id
+                    ? { ...task, ...taskUpdates }
+                    : task
             )
         )
 
@@ -172,9 +183,10 @@ export function useTasks(user, updateStreak) {
 
         const { error } = await supabase
             .from('tasks')
-            .update({ done: updatedDoneStatus })
+            .update(taskUpdates)
             .eq('id', taskToUpdate.id)
             .eq('user_id', user.id)
+            .select()
 
         if (error) {
             console.error('Error updating task:', error)
@@ -185,8 +197,38 @@ export function useTasks(user, updateStreak) {
         if (updatedDoneStatus && updateStreak) {
             await updateStreak()
         }
+
         setSyncStatus('Synced with Supabase')
     }
+
+    async function resetDailyRecurringTasks() {
+        if (!user) return
+
+        const today = new Date().toISOString().split('T')[0]
+
+        const { error } = await supabase
+            .from('tasks')
+            .update({
+                done: false,
+                notification_sent: false,
+                last_generated_date: today,
+            })
+            .eq('user_id', user.id)
+            .eq('recurring', true)
+            .eq('recurrence', 'daily')
+            .eq('done', true)
+            .lt('last_generated_date', today)
+
+        if (error) {
+            console.error('Error resetting daily recurring tasks:', error)
+        }
+    }
+
+    useEffect(() => {
+        if (!user || !tasks.length) return
+
+        resetDailyRecurringTasks()
+    }, [user, tasks.length])
 
     async function addTask(task) {
         if (!user) {

@@ -7,6 +7,7 @@ export default function FocusTimerPage({
   isRunning,
   setIsRunning,
   resetTimer,
+  completedPomodoros,
 }) {
   return (
     <main className="rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-lg sm:p-8">
@@ -34,6 +35,15 @@ export default function FocusTimerPage({
           <p className="text-slate-500">Focus Sprint</p>
           <h3 className="mt-2 text-6xl font-bold">{formatTimer(timerSeconds)}</h3>
         </div>
+      </div>
+
+      <div className="mt-5 rounded-2xl bg-indigo-50 p-4">
+        <p className="text-sm font-semibold text-indigo-700">
+          Pomodoros Completed
+        </p>
+        <p className="mt-1 text-3xl font-bold text-indigo-900">
+          {completedPomodoros}
+        </p>
       </div>
 
       <div className="mx-auto mt-8 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
