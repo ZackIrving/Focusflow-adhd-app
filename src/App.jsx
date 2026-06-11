@@ -22,6 +22,7 @@ import AITaskCoach from './components/AITaskCoach'
 import DailyPlanPage from './components/DailyPlanPage'
 import { useDailyPlan } from './hooks/useDailyPlan'
 import { useProgress } from './hooks/useProgress'
+import { useBadges } from './hooks/useBadges'
 
 export default function ADHDProductivityApp() {
   const {
@@ -75,6 +76,11 @@ export default function ADHDProductivityApp() {
     addXp,
     getLevelProgress,
   } = useProgress(user)
+  const {
+    earnedBadges,
+    badgeStatus,
+    awardBadge,
+  } = useBadges(user)
   const levelProgress = getLevelProgress()
   const {
     timerSeconds,
@@ -84,7 +90,7 @@ export default function ADHDProductivityApp() {
     resetTimer,
     formatTimer,
     completedPomodoros,
-  } = useFocusTimer(setReminderBanner, user, addXp)
+  } = useFocusTimer(setReminderBanner, user, addXp, awardBadge)
   const {
     tasks,
     isLoading,
@@ -115,7 +121,7 @@ export default function ADHDProductivityApp() {
     deleteTask,
     setSyncStatus,
     setTasks,
-  } = useTasks(user, updateStreak, addXp)
+  } = useTasks(user, updateStreak, addXp, awardBadge)
   const {
     habits,
     habitName,
@@ -125,7 +131,7 @@ export default function ADHDProductivityApp() {
     addHabit,
     toggleHabit,
     deleteHabit,
-  } = useHabits(user, addXp)
+  } = useHabits(user, addXp, awardBadge)
   const {
     brainDump,
     setBrainDump,
@@ -343,6 +349,12 @@ export default function ADHDProductivityApp() {
             {progressStatus && (
               <p className="mt-3 rounded-2xl bg-white p-3 text-sm font-medium text-indigo-700">
                 {progressStatus}
+              </p>
+            )}
+
+            {badgeStatus && (
+              <p className="mt-3 rounded-2xl bg-amber-100 p-3 text-sm font-semibold text-amber-800">
+                🏆 {badgeStatus}
               </p>
             )}
           </section>

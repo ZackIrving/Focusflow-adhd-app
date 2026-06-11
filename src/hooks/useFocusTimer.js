@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../supabaseClient'
 
-export function useFocusTimer(setReminderBanner, user, addXp) {
+export function useFocusTimer(setReminderBanner, user, addXp, awardBadge) {
   const [timerSeconds, setTimerSeconds] = useState(1500)
   const [isRunning, setIsRunning] = useState(false)
   const [selectedDuration, setSelectedDuration] = useState(25)
@@ -44,6 +44,10 @@ export function useFocusTimer(setReminderBanner, user, addXp) {
 
     if (addXp) {
       await addXp(25, 'Pomodoro completed')
+    }
+
+    if (awardBadge) {
+      await awardBadge('first_pomodoro')
     }
   }
 
