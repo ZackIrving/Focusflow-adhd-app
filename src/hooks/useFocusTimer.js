@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../supabaseClient'
 
 export function useFocusTimer(setReminderBanner, user, addXp) {
@@ -6,6 +6,7 @@ export function useFocusTimer(setReminderBanner, user, addXp) {
   const [isRunning, setIsRunning] = useState(false)
   const [selectedDuration, setSelectedDuration] = useState(25)
   const [completedPomodoros, setCompletedPomodoros] = useState(0)
+  const hasSavedSessionRef = useRef(false)
 
   async function loadPomodoroStats() {
     if (!user) return
@@ -60,7 +61,10 @@ export function useFocusTimer(setReminderBanner, user, addXp) {
         if (current <= 1) {
           setIsRunning(false)
 
-          savePomodoroSession(selectedDuration)
+          if (!hasSavedSessionRef.current) {
+            hasSavedSessionRef.current = true
+            savePomodoroSession(selectedDuration)
+          }
 
           setReminderBanner(
             'Focus session complete. Take a short break.'
@@ -87,12 +91,14 @@ export function useFocusTimer(setReminderBanner, user, addXp) {
   }, [isRunning, selectedDuration, setReminderBanner])
 
   function selectTimer(minutes) {
+    hasSavedSessionRef.current = false
     setSelectedDuration(minutes)
     setTimerSeconds(minutes * 60)
     setIsRunning(false)
   }
 
   function resetTimer() {
+    hasSavedSessionRef.current = false
     setTimerSeconds(selectedDuration * 60)
     setIsRunning(false)
   }
