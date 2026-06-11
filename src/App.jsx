@@ -23,6 +23,7 @@ import DailyPlanPage from './components/DailyPlanPage'
 import { useDailyPlan } from './hooks/useDailyPlan'
 import { useProgress } from './hooks/useProgress'
 import { useBadges } from './hooks/useBadges'
+import BadgeCollection from './components/BadgeCollection'
 
 export default function ADHDProductivityApp() {
   const {
@@ -491,6 +492,7 @@ export default function ADHDProductivityApp() {
             habits={habits}
             currentStreak={currentStreak}
             longestStreak={longestStreak}
+            earnedBadges={earnedBadges}
           />
         )}
       </div>

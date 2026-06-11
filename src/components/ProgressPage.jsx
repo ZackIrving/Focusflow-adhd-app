@@ -1,3 +1,5 @@
+import BadgeCollection from './BadgeCollection'
+
 export default function ProgressPage({
   focusScore,
   totalXP,
@@ -7,6 +9,7 @@ export default function ProgressPage({
   habits,
   currentStreak,
   longestStreak,
+  earnedBadges,
 }) {
   const completedHabits = habits.filter((habit) => habit.completed_today)
 
@@ -81,6 +84,8 @@ export default function ProgressPage({
           ))}
         </div>
       </section>
+      
+      <BadgeCollection earnedBadges={earnedBadges} />
     </main>
   )
 }
