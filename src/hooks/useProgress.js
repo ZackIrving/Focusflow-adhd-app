@@ -84,6 +84,18 @@ export function useProgress(user) {
       return
     }
 
+    const { error: eventError } = await supabase
+      .from('xp_events')
+      .insert({
+        user_id: user.id,
+        amount,
+        reason,
+      })
+
+    if (eventError) {
+      console.error('Error saving XP event:', eventError)
+    }
+
     setXp(newXp)
     setLevel(newLevel)
 
