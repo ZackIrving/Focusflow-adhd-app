@@ -112,6 +112,7 @@ export default function ADHDProductivityApp() {
     habitName,
     setHabitName,
     habitStatus,
+    habitStats,
     addHabit,
     toggleHabit,
     deleteHabit,
@@ -365,6 +366,7 @@ export default function ADHDProductivityApp() {
                 habitName={habitName}
                 setHabitName={setHabitName}
                 habitStatus={habitStatus}
+                habitStats={habitStats}
                 addHabit={addHabit}
                 toggleHabit={toggleHabit}
                 deleteHabit={deleteHabit}

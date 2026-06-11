@@ -3,6 +3,7 @@ export default function HabitTracker({
   habitName,
   setHabitName,
   habitStatus,
+  habitStats,
   addHabit,
   toggleHabit,
   deleteHabit,
@@ -65,6 +66,19 @@ export default function HabitTracker({
                       Last completed: {habit.last_completed_date}
                     </p>
                   )}
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
+                    <span className="rounded-full bg-indigo-100 px-3 py-1 text-indigo-700">
+                      Current streak: {habitStats?.[habit.id]?.currentStreak || 0}
+                    </span>
+
+                    <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-700">
+                      Best: {habitStats?.[habit.id]?.longestStreak || 0}
+                    </span>
+
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
+                      Total: {habitStats?.[habit.id]?.totalCompletions || 0}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex gap-2">
@@ -72,8 +86,8 @@ export default function HabitTracker({
                     type="button"
                     onClick={() => toggleHabit(habit)}
                     className={`rounded-xl px-4 py-2 font-semibold ${habit.completed_today
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-900 text-white'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-slate-900 text-white'
                       }`}
                   >
                     {habit.completed_today ? 'Done' : 'Mark Done'}

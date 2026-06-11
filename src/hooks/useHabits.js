@@ -7,6 +7,7 @@ export function useHabits(user) {
   const [habits, setHabits] = useState([])
   const [habitName, setHabitName] = useState('')
   const [habitStatus, setHabitStatus] = useState('')
+  const [habitStats, setHabitStats] = useState({})
 
   useEffect(() => {
     if (user) {
@@ -48,6 +49,94 @@ export function useHabits(user) {
 
     setHabits(resetHabits)
     localStorage.setItem('focusflow_habits', JSON.stringify(resetHabits))
+    await loadHabitStats(resetHabits)
+  }
+
+  function calculateHabitStreaks(logs) {
+    const dates = logs
+      .map((log) => log.completed_date)
+      .sort()
+
+    if (dates.length === 0) {
+      return {
+        currentStreak: 0,
+        longestStreak: 0,
+        totalCompletions: 0,
+      }
+    }
+
+    let longestStreak = 1
+    let runningStreak = 1
+
+    for (let i = 1; i < dates.length; i++) {
+      const previous = new Date(dates[i - 1])
+      const current = new Date(dates[i])
+
+      const difference =
+        (current - previous) / (1000 * 60 * 60 * 24)
+
+      if (difference === 1) {
+        runningStreak += 1
+        longestStreak = Math.max(longestStreak, runningStreak)
+      } else if (difference > 1) {
+        runningStreak = 1
+      }
+    }
+
+    const today = new Date()
+    const yesterday = new Date()
+    yesterday.setDate(today.getDate() - 1)
+
+    const todayString = today.toISOString().split('T')[0]
+    const yesterdayString = yesterday.toISOString().split('T')[0]
+
+    let currentStreak = 0
+    let checkDate = dates.includes(todayString)
+      ? today
+      : dates.includes(yesterdayString)
+        ? yesterday
+        : null
+
+    if (checkDate) {
+      const dateSet = new Set(dates)
+
+      while (dateSet.has(checkDate.toISOString().split('T')[0])) {
+        currentStreak += 1
+        checkDate.setDate(checkDate.getDate() - 1)
+      }
+    }
+
+    return {
+      currentStreak,
+      longestStreak,
+      totalCompletions: dates.length,
+    }
+  }
+
+  async function loadHabitStats(habitList) {
+    if (!user) return
+
+    const { data, error } = await supabase
+      .from('habit_logs')
+      .select('*')
+      .eq('user_id', user.id)
+
+    if (error) {
+      console.error('Error loading habit stats:', error)
+      return
+    }
+
+    const stats = {}
+
+    habitList.forEach((habit) => {
+      const logsForHabit = data.filter(
+        (log) => log.habit_id === habit.id
+      )
+
+      stats[habit.id] = calculateHabitStreaks(logsForHabit)
+    })
+
+    setHabitStats(stats)
   }
 
   async function addHabit(event) {
@@ -143,6 +232,7 @@ export function useHabits(user) {
       }
     }
 
+    await loadHabits()
     setHabitStatus(updatedStatus ? 'Habit completed.' : 'Habit unchecked.')
   }
 
@@ -172,6 +262,7 @@ export function useHabits(user) {
     habitName,
     setHabitName,
     habitStatus,
+    habitStats,
     addHabit,
     toggleHabit,
     deleteHabit,
