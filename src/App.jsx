@@ -24,6 +24,7 @@ import { useDailyPlan } from './hooks/useDailyPlan'
 import { useProgress } from './hooks/useProgress'
 import { useBadges } from './hooks/useBadges'
 import BadgeCollection from './components/BadgeCollection'
+import BulldogCompanion from './components/BulldogCompanion'
 
 export default function ADHDProductivityApp() {
   const {
@@ -431,6 +432,8 @@ export default function ADHDProductivityApp() {
                 estimatedFocusMinutes={estimatedFocusMinutes}
                 nextTask={nextTask}
               />
+
+              <BulldogCompanion level={level} xp={xp} />
 
               <HabitTracker
                 habits={habits}
