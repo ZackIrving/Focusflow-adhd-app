@@ -73,7 +73,9 @@ export default function ADHDProductivityApp() {
     level,
     progressStatus,
     addXp,
+    getLevelProgress,
   } = useProgress(user)
+  const levelProgress = getLevelProgress()
   const {
     timerSeconds,
     isRunning,
@@ -316,6 +318,25 @@ export default function ADHDProductivityApp() {
                 <p className="text-2xl font-bold text-indigo-950">
                   {xp} XP
                 </p>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="mb-2 flex items-center justify-between text-sm font-semibold text-indigo-800">
+                <span>
+                  {levelProgress.isMaxLevel
+                    ? 'Max level reached'
+                    : `${levelProgress.xpIntoLevel} / ${levelProgress.xpNeededForNextLevel} XP to next level`}
+                </span>
+
+                <span>{levelProgress.progressPercent}%</span>
+              </div>
+
+              <div className="h-4 overflow-hidden rounded-full bg-white">
+                <div
+                  className="h-full rounded-full bg-indigo-600 transition-all duration-500"
+                  style={{ width: `${levelProgress.progressPercent}%` }}
+                />
               </div>
             </div>
 

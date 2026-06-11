@@ -106,12 +106,56 @@ export function useProgress(user) {
     }
   }
 
+  function getLevelProgress() {
+    const levels = [
+      { level: 1, xpRequired: 0 },
+      { level: 2, xpRequired: 100 },
+      { level: 3, xpRequired: 250 },
+      { level: 4, xpRequired: 500 },
+      { level: 5, xpRequired: 800 },
+      { level: 6, xpRequired: 1200 },
+    ]
+
+    const currentLevelData = levels.find((item) => item.level === level)
+    const nextLevelData = levels.find((item) => item.level === level + 1)
+
+    if (!nextLevelData) {
+      return {
+        currentLevelXp: xp,
+        nextLevelXp: xp,
+        xpIntoLevel: xp,
+        xpNeededForNextLevel: 0,
+        progressPercent: 100,
+        isMaxLevel: true,
+      }
+    }
+
+    const currentLevelXp = currentLevelData.xpRequired
+    const nextLevelXp = nextLevelData.xpRequired
+    const xpIntoLevel = xp - currentLevelXp
+    const xpNeededForNextLevel = nextLevelXp - currentLevelXp
+    const progressPercent = Math.min(
+      100,
+      Math.round((xpIntoLevel / xpNeededForNextLevel) * 100)
+    )
+
+    return {
+      currentLevelXp,
+      nextLevelXp,
+      xpIntoLevel,
+      xpNeededForNextLevel,
+      progressPercent,
+      isMaxLevel: false,
+    }
+  }
+
   return {
     xp,
     level,
     progressStatus,
     addXp,
     calculateLevel,
+    getLevelProgress,
     loadProgress,
   }
 }
