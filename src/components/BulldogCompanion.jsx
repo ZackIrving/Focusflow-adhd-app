@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import BulldogAvatar from './BulldogAvatar'
 
 export default function BulldogCompanion({ level, xp }) {
     const [isExcited, setIsExcited] = useState(false)
