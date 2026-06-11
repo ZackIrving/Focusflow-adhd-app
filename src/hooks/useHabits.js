@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient'
 
 console.log('useHabits file loaded')
 
-export function useHabits(user) {
+export function useHabits(user, addXp) {
   const [habits, setHabits] = useState([])
   const [habitName, setHabitName] = useState('')
   const [habitStatus, setHabitStatus] = useState('')
@@ -233,6 +233,11 @@ export function useHabits(user) {
     }
 
     await loadHabits()
+
+    if (updatedStatus && addXp) {
+      await addXp(5, 'Habit completed')
+    }
+
     setHabitStatus(updatedStatus ? 'Habit completed.' : 'Habit unchecked.')
   }
 

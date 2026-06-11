@@ -21,6 +21,7 @@ import HabitTracker from './components/HabitTracker'
 import AITaskCoach from './components/AITaskCoach'
 import DailyPlanPage from './components/DailyPlanPage'
 import { useDailyPlan } from './hooks/useDailyPlan'
+import { useProgress } from './hooks/useProgress'
 
 export default function ADHDProductivityApp() {
   const {
@@ -68,6 +69,12 @@ export default function ADHDProductivityApp() {
   } = useStreaks(user)
   const [timerMinutes, setTimerMinutes] = useState(25)
   const {
+    xp,
+    level,
+    progressStatus,
+    addXp,
+  } = useProgress(user)
+  const {
     timerSeconds,
     isRunning,
     setIsRunning,
@@ -75,7 +82,7 @@ export default function ADHDProductivityApp() {
     resetTimer,
     formatTimer,
     completedPomodoros,
-  } = useFocusTimer(setReminderBanner, user)
+  } = useFocusTimer(setReminderBanner, user, addXp)
   const {
     tasks,
     isLoading,
@@ -106,7 +113,7 @@ export default function ADHDProductivityApp() {
     deleteTask,
     setSyncStatus,
     setTasks,
-  } = useTasks(user, updateStreak)
+  } = useTasks(user, updateStreak, addXp)
   const {
     habits,
     habitName,
@@ -116,7 +123,7 @@ export default function ADHDProductivityApp() {
     addHabit,
     toggleHabit,
     deleteHabit,
-  } = useHabits(user)
+  } = useHabits(user, addXp)
   const {
     brainDump,
     setBrainDump,
@@ -289,6 +296,36 @@ export default function ADHDProductivityApp() {
           activeMode={activeMode}
           setActiveMode={setActiveMode}
         />
+
+        {user && (
+          <section className="mb-5 rounded-3xl border border-indigo-200 bg-indigo-50 p-5 shadow-sm">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-indigo-700">
+                  FocusFlow Level
+                </p>
+                <h2 className="text-2xl font-bold text-indigo-950">
+                  Level {level}
+                </h2>
+              </div>
+
+              <div className="text-left sm:text-right">
+                <p className="text-sm font-semibold text-indigo-700">
+                  Total XP
+                </p>
+                <p className="text-2xl font-bold text-indigo-950">
+                  {xp} XP
+                </p>
+              </div>
+            </div>
+
+            {progressStatus && (
+              <p className="mt-3 rounded-2xl bg-white p-3 text-sm font-medium text-indigo-700">
+                {progressStatus}
+              </p>
+            )}
+          </section>
+        )}
 
         {isLoading && (
           <main className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-lg">
