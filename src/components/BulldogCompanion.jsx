@@ -43,10 +43,7 @@ export default function BulldogCompanion({ level, xp }) {
                         }`}
                     aria-label="Interact with bulldog companion"
                 >
-                    <div className="relative">
-                        <div className="text-6xl">🐶</div>
-                        <div className="absolute -right-2 top-2 h-3 w-3 animate-ping rounded-full bg-amber-400" />
-                    </div>
+                    <BulldogAvatar isExcited={isExcited} growthStage={growthStage} />
                 </button>
 
                 <div className="flex-1">
