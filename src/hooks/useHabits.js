@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 
+console.log('useHabits file loaded')
+
 export function useHabits(user) {
   const [habits, setHabits] = useState([])
   const [habitName, setHabitName] = useState('')
@@ -82,6 +84,7 @@ export function useHabits(user) {
 
   async function toggleHabit(habit) {
     const updatedStatus = !habit.completed_today
+    const today = new Date().toISOString().split('T')[0]
 
     setHabits((current) =>
       current.map((item) =>
@@ -91,21 +94,53 @@ export function useHabits(user) {
       )
     )
 
-    const { error } = await supabase
+    const { error: habitError } = await supabase
       .from('habits')
       .update({
         completed_today: updatedStatus,
-        last_completed_date: updatedStatus
-          ? new Date().toISOString().split('T')[0]
-          : null,
+        last_completed_date: updatedStatus ? today : null,
       })
       .eq('id', habit.id)
       .eq('user_id', user.id)
 
-    if (error) {
-      console.error('Error updating habit:', error)
+    if (habitError) {
+      console.error('Error updating habit:', habitError)
       setHabitStatus('Could not update habit.')
       return
+    }
+
+    if (updatedStatus) {
+      const { error: logError } = await supabase
+        .from('habit_logs')
+        .upsert(
+          {
+            user_id: user.id,
+            habit_id: habit.id,
+            completed_date: today,
+          },
+          {
+            onConflict: 'user_id,habit_id,completed_date',
+          }
+        )
+
+      if (logError) {
+        console.error('Error saving habit log:', logError)
+        setHabitStatus('Habit completed, but streak log failed.')
+        return
+      }
+    } else {
+      const { error: deleteLogError } = await supabase
+        .from('habit_logs')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('habit_id', habit.id)
+        .eq('completed_date', today)
+
+      if (deleteLogError) {
+        console.error('Error removing habit log:', deleteLogError)
+        setHabitStatus('Habit unchecked, but streak log was not removed.')
+        return
+      }
     }
 
     setHabitStatus(updatedStatus ? 'Habit completed.' : 'Habit unchecked.')

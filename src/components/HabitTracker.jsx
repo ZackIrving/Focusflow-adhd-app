@@ -44,8 +44,8 @@ export default function HabitTracker({
             <div
               key={habit.id}
               className={`rounded-2xl border p-4 ${habit.completed_today
-                  ? 'border-emerald-200 bg-emerald-50'
-                  : 'border-slate-200 bg-white'
+                ? 'border-emerald-200 bg-emerald-50'
+                : 'border-slate-200 bg-white'
                 }`}
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -69,6 +69,7 @@ export default function HabitTracker({
 
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => toggleHabit(habit)}
                     className={`rounded-xl px-4 py-2 font-semibold ${habit.completed_today
                         ? 'bg-emerald-600 text-white'
