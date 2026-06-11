@@ -39,7 +39,7 @@ export default function BulldogCompanion({ level, xp }) {
                 <button
                     type="button"
                     onClick={handleBulldogClick}
-                    className={`relative flex h-32 w-32 shrink-0 items-center justify-center rounded-[2rem] bg-white shadow-inner transition hover:scale-105 ${isExcited ? 'animate-bounce' : 'animate-pulse'
+                    className={`relative flex h-32 w-32 shrink-0 items-center justify-center rounded-[2rem] bg-white shadow-inner transition hover:scale-105 ${isExcited ? 'animate-bounce' : ''
                         }`}
                     aria-label="Interact with bulldog companion"
                 >

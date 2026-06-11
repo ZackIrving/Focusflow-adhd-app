@@ -26,10 +26,13 @@ export default function BulldogAvatar({
 
     return (
         <div
-            className={`transition duration-300 ${isExcited
+            className={`
+      ${isExcited
                     ? 'scale-110 rotate-3'
-                    : 'hover:scale-105'
-                }`}
+                    : 'animate-bulldog-idle hover:scale-105'
+                }
+      transition duration-300
+    `}
         >
             <img
                 src={bulldogImage}
