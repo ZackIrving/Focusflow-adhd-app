@@ -4,6 +4,7 @@ import BulldogAvatar from './BulldogAvatar'
 export default function BulldogCompanion({ level, xp }) {
     const [isExcited, setIsExcited] = useState(false)
     const [message, setMessage] = useState('Tap me when you need a tiny boost.')
+    const [showSparkle, setShowSparkle] = useState(false)
 
     const encouragements = [
         'One tiny step counts.',
@@ -27,10 +28,15 @@ export default function BulldogCompanion({ level, xp }) {
 
         setMessage(randomMessage)
         setIsExcited(true)
+        setShowSparkle(true)
 
         setTimeout(() => {
             setIsExcited(false)
         }, 700)
+
+        setTimeout(() => {
+            setShowSparkle(false)
+        }, 1200)
     }
 
     return (
@@ -44,6 +50,11 @@ export default function BulldogCompanion({ level, xp }) {
                     aria-label="Interact with bulldog companion"
                 >
                     <BulldogAvatar isExcited={isExcited} growthStage={growthStage} />
+                    {showSparkle && (
+                        <div className="pointer-events-none absolute -right-2 -top-2 text-3xl animate-bounce">
+                            ✨
+                        </div>
+                    )}
                 </button>
 
                 <div className="flex-1">
