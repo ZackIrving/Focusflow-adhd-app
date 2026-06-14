@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient'
 
 console.log('useHabits file loaded')
 
-export function useHabits(user, addXp, awardBadge) {
+export function useHabits(user, addXp, awardBadge, setBulldogReaction) {
   const [habits, setHabits] = useState([])
   const [habitName, setHabitName] = useState('')
   const [habitStatus, setHabitStatus] = useState('')
@@ -240,6 +240,13 @@ export function useHabits(user, addXp, awardBadge) {
 
     if (updatedStatus && awardBadge) {
       await awardBadge('first_habit')
+    }
+
+    if (updatedStatus && setBulldogReaction) {
+      setBulldogReaction({
+        type: 'habit',
+        message: 'Nice consistency. Your routine is getting stronger.',
+      })
     }
 
     setHabitStatus(updatedStatus ? 'Habit completed.' : 'Habit unchecked.')

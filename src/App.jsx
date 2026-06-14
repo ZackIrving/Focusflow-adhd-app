@@ -47,6 +47,7 @@ export default function ADHDProductivityApp() {
   } = useDailyPlan(user)
   const [activeMode, setActiveMode] = useState('Today')
   const [reminderBanner, setReminderBanner] = useState('')
+  const [bulldogReaction, setBulldogReaction] = useState(null)
   const [dailyPlanningReminder, setDailyPlanningReminder] = useState('')
   const [notificationPermission, setNotificationPermission] = useState(
     'Notification' in window ? Notification.permission : 'unsupported'
@@ -92,7 +93,7 @@ export default function ADHDProductivityApp() {
     resetTimer,
     formatTimer,
     completedPomodoros,
-  } = useFocusTimer(setReminderBanner, user, addXp, awardBadge)
+  } = useFocusTimer(setReminderBanner, user, addXp, awardBadge, setBulldogReaction)
   const {
     tasks,
     isLoading,
@@ -123,7 +124,7 @@ export default function ADHDProductivityApp() {
     deleteTask,
     setSyncStatus,
     setTasks,
-  } = useTasks(user, updateStreak, addXp, awardBadge)
+  } = useTasks(user, updateStreak, addXp, awardBadge, setBulldogReaction)
   const {
     habits,
     habitName,
@@ -133,7 +134,7 @@ export default function ADHDProductivityApp() {
     addHabit,
     toggleHabit,
     deleteHabit,
-  } = useHabits(user, addXp, awardBadge)
+  } = useHabits(user, addXp, awardBadge, setBulldogReaction)
   const {
     brainDump,
     setBrainDump,
@@ -433,7 +434,12 @@ export default function ADHDProductivityApp() {
                 nextTask={nextTask}
               />
 
-              <BulldogCompanion level={level} xp={xp} />
+              <BulldogCompanion
+                level={level}
+                xp={xp}
+                bulldogReaction={bulldogReaction}
+                setBulldogReaction={setBulldogReaction}
+              />
 
               <HabitTracker
                 habits={habits}

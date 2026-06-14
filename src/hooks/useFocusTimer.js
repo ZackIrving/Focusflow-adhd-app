@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../supabaseClient'
 
-export function useFocusTimer(setReminderBanner, user, addXp, awardBadge) {
+export function useFocusTimer(setReminderBanner, user, addXp, awardBadge, setBulldogReaction) {
   const [timerSeconds, setTimerSeconds] = useState(1500)
   const [isRunning, setIsRunning] = useState(false)
   const [selectedDuration, setSelectedDuration] = useState(25)
@@ -48,6 +48,13 @@ export function useFocusTimer(setReminderBanner, user, addXp, awardBadge) {
 
     if (awardBadge) {
       await awardBadge('first_pomodoro')
+    }
+
+    if (setBulldogReaction) {
+      setBulldogReaction({
+        type: 'pomodoro',
+        message: 'Deep focus complete. That was a strong session.',
+      })
     }
   }
 

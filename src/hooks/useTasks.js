@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { emptyTaskForm, starterTasks } from '../constants/appData'
 
-export function useTasks(user, updateStreak, addXp, awardBadge) {
+export function useTasks(user, updateStreak, addXp, awardBadge, setBulldogReaction) {
     const [tasks, setTasks] = useState([])
     const [isLoading, setIsLoading] = useState(false)
     const [syncStatus, setSyncStatus] = useState('Waiting for login...')
@@ -204,6 +204,13 @@ export function useTasks(user, updateStreak, addXp, awardBadge) {
 
         if (updatedDoneStatus && awardBadge) {
             await awardBadge('first_task')
+        }
+
+        if (updatedDoneStatus && setBulldogReaction) {
+            setBulldogReaction({
+                type: 'task',
+                message: 'Nice task win. Small progress still counts.',
+            })
         }
 
         setSyncStatus('Synced with Supabase')

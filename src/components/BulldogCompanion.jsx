@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import BulldogAvatar from './BulldogAvatar'
 
-export default function BulldogCompanion({ level, xp }) {
+export default function BulldogCompanion({ level, xp, bulldogReaction, setBulldogReaction }) {
     const [isExcited, setIsExcited] = useState(false)
     const [message, setMessage] = useState('Tap me when you need a tiny boost.')
     const [showSparkle, setShowSparkle] = useState(false)
@@ -15,12 +15,33 @@ export default function BulldogCompanion({ level, xp }) {
     ]
 
     const growthStage = useMemo(() => {
-        if (xp >= 800) return 'Adult Bulldog'
-        if (xp >= 500) return 'Young Adult Bulldog'
-        if (xp >= 250) return 'Teen Bulldog'
+        if (xp >= 700) return 'Adult Bulldog'
+        if (xp >= 300) return 'Teen Bulldog'
         if (xp >= 100) return 'Curious Puppy'
         return 'Tiny Puppy'
     }, [xp])
+
+    useEffect(() => {
+        if (!bulldogReaction) return
+
+        setMessage(bulldogReaction.message)
+        setIsExcited(true)
+        setShowSparkle(true)
+
+        const excitementTimer = setTimeout(() => {
+            setIsExcited(false)
+        }, 900)
+
+        const sparkleTimer = setTimeout(() => {
+            setShowSparkle(false)
+            setBulldogReaction(null)
+        }, 1500)
+
+        return () => {
+            clearTimeout(excitementTimer)
+            clearTimeout(sparkleTimer)
+        }
+    }, [bulldogReaction, setBulldogReaction])
 
     function handleBulldogClick() {
         const randomMessage =
