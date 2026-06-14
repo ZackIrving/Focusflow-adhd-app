@@ -25,6 +25,8 @@ import { useProgress } from './hooks/useProgress'
 import { useBadges } from './hooks/useBadges'
 import BadgeCollection from './components/BadgeCollection'
 import BulldogCompanion from './components/BulldogCompanion'
+import WeeklyReviewPage from './components/WeeklyReviewPage'
+import { useWeeklyReview } from './hooks/useWeeklyReview'
 
 export default function ADHDProductivityApp() {
   const {
@@ -140,6 +142,11 @@ export default function ADHDProductivityApp() {
     setBrainDump,
     createBreakdown,
   } = useBrainDump(user, setTasks, setSyncStatus, setActiveMode)
+  const {
+    weeklyReview,
+    weeklyReviewStatus,
+    loadWeeklyReview,
+  } = useWeeklyReview(user)
 
   useEffect(() => {
     if (!tasks.length) return
@@ -505,6 +512,14 @@ export default function ADHDProductivityApp() {
             currentStreak={currentStreak}
             longestStreak={longestStreak}
             earnedBadges={earnedBadges}
+          />
+        )}
+
+        {!isLoading && activeMode === 'Weekly Review' && (
+          <WeeklyReviewPage
+            weeklyReview={weeklyReview}
+            weeklyReviewStatus={weeklyReviewStatus}
+            loadWeeklyReview={loadWeeklyReview}
           />
         )}
       </div>

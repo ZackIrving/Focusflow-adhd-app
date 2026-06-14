@@ -39,6 +39,7 @@ export const appModes = [
   'Brain Dump',
   'Focus Timer',
   'Progress',
+  'Weekly Review',
 ]
 
 export const emptyTaskForm = {
