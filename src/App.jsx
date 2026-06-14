@@ -27,6 +27,7 @@ import BadgeCollection from './components/BadgeCollection'
 import BulldogCompanion from './components/BulldogCompanion'
 import WeeklyReviewPage from './components/WeeklyReviewPage'
 import { useWeeklyReview } from './hooks/useWeeklyReview'
+import DistractionBlockerPage from './components/DistractionBlockerPage'
 
 export default function ADHDProductivityApp() {
   const {
@@ -521,6 +522,10 @@ export default function ADHDProductivityApp() {
             weeklyReviewStatus={weeklyReviewStatus}
             loadWeeklyReview={loadWeeklyReview}
           />
+        )}
+
+        {!isLoading && activeMode === 'Distraction Blocker' && (
+          <DistractionBlockerPage />
         )}
       </div>
     </div>

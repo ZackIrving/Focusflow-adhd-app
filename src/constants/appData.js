@@ -40,6 +40,7 @@ export const appModes = [
   'Focus Timer',
   'Progress',
   'Weekly Review',
+  'Distraction Blocker',
 ]
 
 export const emptyTaskForm = {
