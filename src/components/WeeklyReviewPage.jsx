@@ -31,6 +31,20 @@ export default function WeeklyReviewPage({
         },
     ]
 
+    const totalWins =
+        weeklyReview.tasksCompleted +
+        weeklyReview.habitsCompleted +
+        weeklyReview.pomodorosCompleted
+
+    const reviewMessage =
+        totalWins === 0
+            ? 'No pressure. This week can start with one tiny win.'
+            : totalWins < 5
+                ? 'You showed up this week. Small wins still count.'
+                : totalWins < 15
+                    ? 'You built real momentum this week.'
+                    : 'Strong week. Your consistency is paying off.'
+
     return (
         <main className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg sm:p-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -54,6 +68,15 @@ export default function WeeklyReviewPage({
                     {weeklyReviewStatus}
                 </p>
             )}
+
+            <div className="mt-5 rounded-3xl bg-indigo-50 p-5">
+                <p className="text-sm font-semibold text-indigo-700">
+                    Weekly Reflection
+                </p>
+                <p className="mt-2 text-lg font-bold text-indigo-950">
+                    {reviewMessage}
+                </p>
+            </div>
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 {stats.map((stat) => (
