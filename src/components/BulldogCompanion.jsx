@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import BulldogAvatar from './BulldogAvatar'
 
-export default function BulldogCompanion({ level, xp, bulldogReaction, setBulldogReaction }) {
+export default function BulldogCompanion({ level, xp, bulldogReaction, setBulldogReaction, completedToday, completedPomodoros, habits, }) {
     const [isExcited, setIsExcited] = useState(false)
     const [message, setMessage] = useState('Tap me when you need a tiny boost.')
     const [showSparkle, setShowSparkle] = useState(false)
@@ -20,6 +20,19 @@ export default function BulldogCompanion({ level, xp, bulldogReaction, setBulldo
         if (xp >= 100) return 'Curious Puppy'
         return 'Tiny Puppy'
     }, [xp])
+
+    const completedHabitsToday = habits.filter(
+        (habit) => habit.completed_today
+    ).length
+
+    const happiness = Math.min(
+        100,
+        completedToday * 15 + completedHabitsToday * 20
+    )
+
+    const focus = Math.min(100, completedPomodoros * 10)
+
+    const bond = Math.min(100, level * 15)
 
     useEffect(() => {
         if (!bulldogReaction) return
@@ -98,10 +111,28 @@ export default function BulldogCompanion({ level, xp, bulldogReaction, setBulldo
                     <div className="mt-4 grid grid-cols-2 gap-3">
                         <div className="rounded-2xl bg-white p-3">
                             <p className="text-xs font-semibold text-amber-700">
-                                Bond Level
+                                Bond
                             </p>
                             <p className="text-xl font-bold text-amber-950">
-                                Level {level}
+                                {bond}%
+                            </p>
+                        </div>
+
+                        <div className="rounded-2xl bg-white p-3">
+                            <p className="text-xs font-semibold text-amber-700">
+                                Happiness
+                            </p>
+                            <p className="text-xl font-bold text-amber-950">
+                                {happiness}%
+                            </p>
+                        </div>
+
+                        <div className="rounded-2xl bg-white p-3">
+                            <p className="text-xs font-semibold text-amber-700">
+                                Focus
+                            </p>
+                            <p className="text-xl font-bold text-amber-950">
+                                {focus}%
                             </p>
                         </div>
 

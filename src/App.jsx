@@ -439,6 +439,9 @@ export default function ADHDProductivityApp() {
                 xp={xp}
                 bulldogReaction={bulldogReaction}
                 setBulldogReaction={setBulldogReaction}
+                completedToday={completedToday}
+                completedPomodoros={completedPomodoros}
+                habits={habits}
               />
 
               <HabitTracker
