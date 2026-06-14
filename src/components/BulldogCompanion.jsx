@@ -36,6 +36,8 @@ export default function BulldogCompanion({ level, xp, bulldogReaction, setBulldo
 
     const unlockedCosmetic = level >= 2 ? 'red_collar' : null
 
+    const selectedBreed = 'English Bulldog'
+
     useEffect(() => {
         if (!bulldogReaction) return
 
@@ -99,7 +101,7 @@ export default function BulldogCompanion({ level, xp, bulldogReaction, setBulldo
                     </p>
 
                     <h2 className="text-2xl font-bold text-amber-950">
-                        English Bulldog
+                        {selectedBreed}
                     </h2>
 
                     <p className="mt-1 text-sm font-semibold text-amber-800">
@@ -157,6 +159,20 @@ export default function BulldogCompanion({ level, xp, bulldogReaction, setBulldo
                             {unlockedCosmetic
                                 ? 'Red Collar Unlocked'
                                 : 'Reach Level 2 to unlock collar'}
+                        </p>
+                    </div>
+
+                    <div className="mt-4 rounded-2xl bg-white p-3">
+                        <p className="text-xs font-semibold text-amber-700">
+                            Breed Collection
+                        </p>
+
+                        <p className="text-sm font-bold text-amber-950">
+                            English Bulldog unlocked
+                        </p>
+
+                        <p className="mt-1 text-xs text-amber-700">
+                            More breeds will unlock as FocusFlow grows.
                         </p>
                     </div>
                 </div>
