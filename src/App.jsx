@@ -47,6 +47,11 @@ export default function ADHDProductivityApp() {
     updateDailyPlan,
     saveDailyPlan,
   } = useDailyPlan(user)
+  const {
+    weeklyReview,
+    weeklyReviewStatus,
+    loadWeeklyReview,
+  } = useWeeklyReview(user)
   const [activeMode, setActiveMode] = useState('Today')
   const [reminderBanner, setReminderBanner] = useState('')
   const [bulldogReaction, setBulldogReaction] = useState(null)
@@ -142,11 +147,6 @@ export default function ADHDProductivityApp() {
     setBrainDump,
     createBreakdown,
   } = useBrainDump(user, setTasks, setSyncStatus, setActiveMode)
-  const {
-    weeklyReview,
-    weeklyReviewStatus,
-    loadWeeklyReview,
-  } = useWeeklyReview(user)
 
   useEffect(() => {
     if (!tasks.length) return
