@@ -6,6 +6,7 @@ import adultBulldog from '../assets/bulldog/adult-bulldog.png'
 export default function BulldogAvatar({
     isExcited,
     growthStage,
+    cosmetic,
 }) {
     let bulldogImage = puppyStage1
 
@@ -27,6 +28,7 @@ export default function BulldogAvatar({
     return (
         <div
             className={`
+      relative
       ${isExcited
                     ? 'scale-110 rotate-3'
                     : 'animate-bulldog-idle hover:scale-105'

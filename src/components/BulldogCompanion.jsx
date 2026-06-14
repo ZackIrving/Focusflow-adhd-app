@@ -34,6 +34,8 @@ export default function BulldogCompanion({ level, xp, bulldogReaction, setBulldo
 
     const bond = Math.min(100, level * 15)
 
+    const unlockedCosmetic = level >= 2 ? 'red_collar' : null
+
     useEffect(() => {
         if (!bulldogReaction) return
 
@@ -83,7 +85,7 @@ export default function BulldogCompanion({ level, xp, bulldogReaction, setBulldo
                         }`}
                     aria-label="Interact with bulldog companion"
                 >
-                    <BulldogAvatar isExcited={isExcited} growthStage={growthStage} />
+                    <BulldogAvatar isExcited={isExcited} growthStage={growthStage} cosmetic={unlockedCosmetic} />
                     {showSparkle && (
                         <div className="pointer-events-none absolute -right-2 -top-2 text-3xl animate-bounce">
                             ✨
@@ -144,6 +146,18 @@ export default function BulldogCompanion({ level, xp, bulldogReaction, setBulldo
                                 {xp} XP
                             </p>
                         </div>
+                    </div>
+
+                    <div className="mt-4 rounded-2xl bg-white p-3">
+                        <p className="text-xs font-semibold text-amber-700">
+                            Cosmetic
+                        </p>
+
+                        <p className="text-sm font-bold text-amber-950">
+                            {unlockedCosmetic
+                                ? 'Red Collar Unlocked'
+                                : 'Reach Level 2 to unlock collar'}
+                        </p>
                     </div>
                 </div>
             </div>
