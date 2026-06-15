@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { sendBrowserNotification } from '../utils/notifications'
 
 export function useFocusTimer(setReminderBanner, user, addXp, awardBadge, setBulldogReaction) {
   const [timerSeconds, setTimerSeconds] = useState(1500)
@@ -81,15 +82,10 @@ export function useFocusTimer(setReminderBanner, user, addXp, awardBadge, setBul
             'Focus session complete. Take a short break.'
           )
 
-          if (
-            'Notification' in window &&
-            Notification.permission === 'granted'
-          ) {
-            new Notification('FocusFlow', {
-              body: 'Focus session complete. Take a short break.',
-              icon: '/icon-192.png',
-            })
-          }
+          sendBrowserNotification(
+            'FocusFlow',
+            'Focus session complete. Take a short break.'
+          )
 
           return 0
         }
