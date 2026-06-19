@@ -57,38 +57,32 @@ export function usePushNotifications(user) {
 
         const registration = await navigator.serviceWorker.ready
 
-        const existingSubscription =
-            await registration.pushManager.getSubscription()
-
-        if (existingSubscription) {
-            await existingSubscription.unsubscribe()
-        }
-
-        console.log('VAPID KEY:', import.meta.env.VITE_VAPID_PUBLIC_KEY)
-        console.log('ALL ENV:', import.meta.env)
-
         const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
 
-        let subscription
+        let subscription = await registration.pushManager.getSubscription()
 
-        try {
-            subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-            })
+        if (!subscription) {
+            try {
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                })
 
-            console.log('PUSH SUBSCRIPTION CREATED:', subscription)
-        } catch (subscriptionError) {
-            console.error('PUSH SUBSCRIPTION ERROR:', subscriptionError)
-            console.log('Notification.permission:', Notification.permission)
-            console.log('Service worker registration:', registration)
-            console.log('VAPID key exists:', Boolean(vapidPublicKey))
+                console.log('PUSH SUBSCRIPTION CREATED:', subscription)
+            } catch (subscriptionError) {
+                console.error('PUSH SUBSCRIPTION ERROR:', subscriptionError)
+                console.log('Notification.permission:', Notification.permission)
+                console.log('Service worker registration:', registration)
+                console.log('VAPID key exists:', Boolean(vapidPublicKey))
 
-            setPushStatus(
-                `Could not create push subscription: ${subscriptionError.name}`
-            )
+                setPushStatus(
+                    `Could not create push subscription: ${subscriptionError.name}`
+                )
 
-            return
+                return
+            }
+        } else {
+            console.log('EXISTING PUSH SUBSCRIPTION FOUND:', subscription)
         }
 
         const subscriptionJson = subscription.toJSON()
