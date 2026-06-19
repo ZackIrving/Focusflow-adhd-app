@@ -75,6 +75,9 @@ export function usePushNotifications(user) {
                 }
             )
 
+        console.log('SUBSCRIPTION JSON:', subscriptionJson)
+        console.log('SUPABASE PUSH ERROR:', error)
+
         if (error) {
             console.error('Error saving push subscription:', error)
             setPushStatus('Could not save push subscription.')
