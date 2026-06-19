@@ -21,6 +21,7 @@ export function usePushNotifications(user) {
     const [pushStatus, setPushStatus] = useState('')
 
     async function enablePushNotifications() {
+        console.log('ENABLE PUSH CLICKED')
         if (!user) return
 
         if (!('serviceWorker' in navigator)) {
@@ -34,6 +35,9 @@ export function usePushNotifications(user) {
         }
 
         const permission = await Notification.requestPermission()
+
+        console.log('PUSH PERMISSION:', permission)
+        console.log('CURRENT NOTIFICATION PERMISSION:', Notification.permission)
 
         if (permission !== 'granted') {
             setPushStatus('Push notifications were not enabled.')
