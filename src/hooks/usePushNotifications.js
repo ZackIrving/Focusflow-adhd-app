@@ -69,10 +69,20 @@ export function usePushNotifications(user) {
 
         const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
 
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-        })
+        let subscription
+
+        try {
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+            })
+
+            console.log('PUSH SUBSCRIPTION CREATED:', subscription)
+        } catch (subscriptionError) {
+            console.error('PUSH SUBSCRIPTION ERROR:', subscriptionError)
+            setPushStatus('Could not create push subscription.')
+            return
+        }
 
         const subscriptionJson = subscription.toJSON()
 
