@@ -21,7 +21,6 @@ export function usePushNotifications(user) {
     const [pushStatus, setPushStatus] = useState('')
 
     async function enablePushNotifications() {
-        console.log('ENABLE PUSH CLICKED')
         if (!user) return
 
         if (!('serviceWorker' in navigator)) {
@@ -39,12 +38,6 @@ export function usePushNotifications(user) {
         if (permission === 'default') {
             permission = await Notification.requestPermission()
         }
-
-        console.log('PUSH PERMISSION:', permission)
-        console.log(
-            'CURRENT NOTIFICATION PERMISSION:',
-            Notification.permission
-        )
 
         if (permission !== 'granted') {
             setPushStatus(
@@ -68,22 +61,14 @@ export function usePushNotifications(user) {
                     applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
                 })
 
-                console.log('PUSH SUBSCRIPTION CREATED:', subscription)
             } catch (subscriptionError) {
                 console.error('PUSH SUBSCRIPTION ERROR:', subscriptionError)
-                console.log('Notification.permission:', Notification.permission)
-                console.log('Service worker registration:', registration)
-                console.log('VAPID key exists:', Boolean(vapidPublicKey))
-
                 setPushStatus(
                     `Could not create push subscription: ${subscriptionError.name}`
                 )
-
                 return
             }
-        } else {
-            console.log('EXISTING PUSH SUBSCRIPTION FOUND:', subscription)
-        }
+        } 
 
         const subscriptionJson = subscription.toJSON()
 
@@ -100,9 +85,6 @@ export function usePushNotifications(user) {
                     onConflict: 'endpoint',
                 }
             )
-
-        console.log('SUBSCRIPTION JSON:', subscriptionJson)
-        console.log('SUPABASE PUSH ERROR:', error)
 
         if (error) {
             console.error('Error saving push subscription:', error)
