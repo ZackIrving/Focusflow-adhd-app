@@ -34,15 +34,26 @@ export function usePushNotifications(user) {
             return
         }
 
-        const permission = await Notification.requestPermission()
+        let permission = Notification.permission
+
+        if (permission === 'default') {
+            permission = await Notification.requestPermission()
+        }
 
         console.log('PUSH PERMISSION:', permission)
-        console.log('CURRENT NOTIFICATION PERMISSION:', Notification.permission)
+        console.log(
+            'CURRENT NOTIFICATION PERMISSION:',
+            Notification.permission
+        )
 
         if (permission !== 'granted') {
-            setPushStatus('Push notifications were not enabled.')
+            setPushStatus(
+                'Push notifications were not enabled. Check your browser site settings and allow notifications for FocusFlow.'
+            )
             return
         }
+
+        setPushStatus('Permission granted. Creating push subscription...')
 
         const registration = await navigator.serviceWorker.ready
 
