@@ -28,6 +28,7 @@ import BulldogCompanion from './components/BulldogCompanion'
 import WeeklyReviewPage from './components/WeeklyReviewPage'
 import { useWeeklyReview } from './hooks/useWeeklyReview'
 import DistractionBlockerPage from './components/DistractionBlockerPage'
+import { usePushNotifications } from './hooks/usePushNotifications'
 
 export default function ADHDProductivityApp() {
   const {
@@ -92,6 +93,10 @@ export default function ADHDProductivityApp() {
     badgeStatus,
     awardBadge,
   } = useBadges(user)
+  const {
+    pushStatus,
+    enablePushNotifications,
+  } = usePushNotifications(user)
   const levelProgress = getLevelProgress()
   const {
     timerSeconds,
@@ -432,6 +437,23 @@ export default function ADHDProductivityApp() {
                 </div>
               </div>
             </section>
+
+            {user && (
+              <section className="mb-5 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                <button
+                  onClick={enablePushNotifications}
+                  className="rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-slate-700"
+                >
+                  Enable Push Notifications
+                </button>
+
+                {pushStatus && (
+                  <p className="mt-3 text-sm font-semibold text-slate-600">
+                    {pushStatus}
+                  </p>
+                )}
+              </section>
+            )}
 
             <aside className="space-y-6">
               <DailyStats

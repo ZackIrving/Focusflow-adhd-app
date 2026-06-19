@@ -32,3 +32,26 @@ self.addEventListener('fetch', (event) => {
         })
     )
 })
+
+self.addEventListener('push', (event) => {
+    const data = event.data ? event.data.json() : {}
+
+    const title = data.title || 'FocusFlow'
+    const options = {
+        body: data.body || 'You have a FocusFlow reminder.',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+    }
+
+    event.waitUntil(
+        self.registration.showNotification(title, options)
+    )
+})
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close()
+
+    event.waitUntil(
+        clients.openWindow('/')
+    )
+})
