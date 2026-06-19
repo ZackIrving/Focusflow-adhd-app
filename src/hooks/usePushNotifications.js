@@ -80,7 +80,14 @@ export function usePushNotifications(user) {
             console.log('PUSH SUBSCRIPTION CREATED:', subscription)
         } catch (subscriptionError) {
             console.error('PUSH SUBSCRIPTION ERROR:', subscriptionError)
-            setPushStatus('Could not create push subscription.')
+            console.log('Notification.permission:', Notification.permission)
+            console.log('Service worker registration:', registration)
+            console.log('VAPID key exists:', Boolean(vapidPublicKey))
+
+            setPushStatus(
+                `Could not create push subscription: ${subscriptionError.name}`
+            )
+
             return
         }
 
