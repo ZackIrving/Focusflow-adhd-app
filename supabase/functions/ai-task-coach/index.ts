@@ -1,84 +1,72 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type',
-}
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+serve(async (req) => {
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 })
   }
 
-  try {
-    const { tasks = [], habits = [], brainDump = '' } = await req.json()
+  const { input } = await req.json()
 
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
-
-    if (!openaiApiKey) {
-      return new Response(
-        JSON.stringify({ error: 'Missing OPENAI_API_KEY secret.' }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      )
-    }
-
-    const prompt = `
-You are an ADHD productivity coach.
-
-Use the user's current tasks, habits, and optional brain dump to recommend:
-1. The best next task
-2. A 5-minute starting step
-3. A suggested focus sprint length
-4. A short encouragement message
-
-Keep the response practical, direct, and not overly motivational.
-
-Tasks:
-${JSON.stringify(tasks, null, 2)}
-
-Habits:
-${JSON.stringify(habits, null, 2)}
-
-Brain Dump:
-${brainDump}
-`
-
-    const openaiResponse = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4.1-mini',
-        input: prompt,
-      }),
-    })
-
-    const result = await openaiResponse.json()
-
-    if (!openaiResponse.ok) {
-      return new Response(JSON.stringify({ error: result }), {
-        status: openaiResponse.status,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
+  if (!input) {
     return new Response(
-      JSON.stringify({
-        recommendation:
-          result.output_text || 'No recommendation generated.',
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ error: 'Missing input' }),
+      { headers: { 'Content-Type': 'application/json' }, status: 400 }
     )
-  } catch (error) {
-    return new Response(JSON.stringify({ error: String(error) }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
   }
+
+  const response = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+  model: 'gpt-5-mini',
+  reasoning: {
+    effort: 'low',
+  },
+  text: {
+    verbosity: 'low',
+  },
+  input: [
+    {
+      role: 'system',
+      content:
+          'You are FocusFlow, an ADHD-friendly productivity coach. Return only plain text. Keep the response under 120 words. Do not repeat yourself. Give 3 tiny next steps, then one encouraging sentence.',
+    },
+    {
+      role: 'user',
+      content: `Break this down into 3 tiny next steps: ${input}`,
+    },
+  ],
+}),
+  })
+
+ const data = await response.json()
+
+console.log('OPENAI STATUS:', response.status)
+console.log('OPENAI DATA:', data)
+
+const outputText =
+  data.output_text ||
+  data.output
+    ?.flatMap((item) => item.content || [])
+    ?.map((content) => content.text || content.output_text)
+    ?.filter(Boolean)
+    ?.join('\n\n') ||
+  data.error?.message ||
+  'I could not generate a response. Try again.'
+
+return new Response(
+  JSON.stringify({
+    status: response.status,
+    result: outputText,
+    raw: data,
+  }),
+  {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }
+)
 })
