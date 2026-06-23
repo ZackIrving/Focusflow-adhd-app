@@ -29,6 +29,8 @@ import WeeklyReviewPage from './components/WeeklyReviewPage'
 import { useWeeklyReview } from './hooks/useWeeklyReview'
 import DistractionBlockerPage from './components/DistractionBlockerPage'
 import { usePushNotifications } from './hooks/usePushNotifications'
+import AICoachPage from './components/AICoachPage'
+import { useAICoach } from './hooks/useAICoach'
 
 export default function ADHDProductivityApp() {
   const {
@@ -153,6 +155,13 @@ export default function ADHDProductivityApp() {
     setBrainDump,
     createBreakdown,
   } = useBrainDump(user, setTasks, setSyncStatus, setActiveMode)
+  const {
+    coachInput,
+    setCoachInput,
+    coachResponse,
+    coachStatus,
+    getCoachResponse,
+  } = useAICoach()
 
   useEffect(() => {
     if (!tasks.length) return
@@ -548,6 +557,16 @@ export default function ADHDProductivityApp() {
 
         {!isLoading && activeMode === 'Distraction Blocker' && (
           <DistractionBlockerPage />
+        )}
+
+        {!isLoading && activeMode === 'AI Coach' && (
+          <AICoachPage
+            coachInput={coachInput}
+            setCoachInput={setCoachInput}
+            coachResponse={coachResponse}
+            coachStatus={coachStatus}
+            getCoachResponse={getCoachResponse}
+          />
         )}
       </div>
     </div>

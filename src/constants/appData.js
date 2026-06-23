@@ -41,6 +41,7 @@ export const appModes = [
   'Progress',
   'Weekly Review',
   'Distraction Blocker',
+  'AI Coach',
 ]
 
 export const emptyTaskForm = {
