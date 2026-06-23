@@ -142,6 +142,8 @@ export default function ADHDProductivityApp() {
   } = useTasks(user, updateStreak, addXp, awardBadge, setBulldogReaction)
 
   async function addCoachTasksToToday(coachTasks) {
+    if (coachTasksAdded) return
+
     for (const task of coachTasks) {
       await addTask({
         title: task.title,
@@ -156,6 +158,8 @@ export default function ADHDProductivityApp() {
         reminder_time: null,
       })
     }
+
+    setCoachTasksAdded(true)
   }
   const {
     habits,
@@ -178,6 +182,8 @@ export default function ADHDProductivityApp() {
     coachResponse,
     coachStatus,
     getCoachResponse,
+    coachTasksAdded,
+    setCoachTasksAdded,
   } = useAICoach()
 
   useEffect(() => {
@@ -584,6 +590,7 @@ export default function ADHDProductivityApp() {
             coachStatus={coachStatus}
             getCoachResponse={getCoachResponse}
             addCoachTasksToToday={addCoachTasksToToday}
+            coachTasksAdded={coachTasksAdded}
           />
         )}
       </div>

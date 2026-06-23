@@ -5,6 +5,7 @@ export function useAICoach() {
     const [coachInput, setCoachInput] = useState('')
     const [coachResponse, setCoachResponse] = useState(null)
     const [coachStatus, setCoachStatus] = useState('')
+    const [coachTasksAdded, setCoachTasksAdded] = useState(false)
 
     async function getCoachResponse(event) {
         event.preventDefault()
@@ -15,6 +16,7 @@ export function useAICoach() {
         }
 
         setCoachStatus('Coach is thinking...')
+        setCoachTasksAdded(false)
 
         const { data, error } = await supabase.functions.invoke('ai-task-coach', {
             body: {
@@ -48,6 +50,8 @@ export function useAICoach() {
         setCoachInput,
         coachResponse,
         coachStatus,
+        coachTasksAdded,
+        setCoachTasksAdded,
         getCoachResponse,
     }
 }

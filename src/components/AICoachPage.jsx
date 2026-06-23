@@ -5,6 +5,7 @@ export default function AICoachPage({
     coachStatus,
     getCoachResponse,
     addCoachTasksToToday,
+    coachTasksAdded,
 }) {
     return (
         <main className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg sm:p-8">
@@ -77,13 +78,25 @@ export default function AICoachPage({
                     )}
 
                     {coachResponse.tasks?.length > 0 && (
-                        <button
-                            type="button"
-                            onClick={() => addCoachTasksToToday(coachResponse.tasks)}
-                            className="mt-4 rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-slate-700"
-                        >
-                            Add These Tasks to Today
-                        </button>
+                        <div className="mt-4">
+                            <button
+                                type="button"
+                                onClick={() => addCoachTasksToToday(coachResponse.tasks)}
+                                disabled={coachTasksAdded}
+                                className={`rounded-2xl px-5 py-3 font-semibold text-white shadow-lg transition ${coachTasksAdded
+                                        ? 'cursor-not-allowed bg-emerald-600'
+                                        : 'bg-slate-900 hover:bg-slate-700'
+                                    }`}
+                            >
+                                {coachTasksAdded ? 'Tasks Added to Today' : 'Add These Tasks to Today'}
+                            </button>
+
+                            {coachTasksAdded && (
+                                <p className="mt-3 rounded-2xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">
+                                    3 AI tasks added to Today.
+                                </p>
+                            )}
+                        </div>
                     )}
 
                     {coachResponse.startHere && (
