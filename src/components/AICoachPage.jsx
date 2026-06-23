@@ -41,8 +41,61 @@ export default function AICoachPage({
             )}
 
             {coachResponse && (
-                <section className="mt-6 whitespace-pre-wrap rounded-3xl bg-indigo-50 p-5 text-lg font-semibold text-indigo-950">
-                    {coachResponse}
+                <section className="mt-6 rounded-3xl border border-indigo-200 bg-indigo-50 p-5 shadow-sm">
+                    <h3 className="mb-3 text-lg font-bold text-indigo-900">
+                        Your Coach's Plan
+                    </h3>
+
+                    {coachResponse.summary && (
+                        <p className="rounded-2xl bg-white p-4 text-slate-700">
+                            {coachResponse.summary}
+                        </p>
+                    )}
+
+                    {coachResponse.tasks?.length > 0 && (
+                        <div className="mt-4 space-y-3">
+                            <p className="font-bold text-indigo-900">
+                                Tiny Next Steps
+                            </p>
+
+                            {coachResponse.tasks.map((task, index) => (
+                                <div
+                                    key={`${task.title}-${index}`}
+                                    className="rounded-2xl bg-white p-4"
+                                >
+                                    <p className="font-semibold text-slate-900">
+                                        {index + 1}. {task.title}
+                                    </p>
+
+                                    <p className="mt-2 text-sm text-slate-500">
+                                        {task.energy} energy · {task.time} · {task.reward} XP
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {coachResponse.startHere && (
+                        <div className="mt-4 rounded-2xl bg-emerald-50 p-4">
+                            <p className="text-sm font-bold text-emerald-700">
+                                Start Here
+                            </p>
+                            <p className="mt-1 font-semibold text-emerald-950">
+                                {coachResponse.startHere}
+                            </p>
+                        </div>
+                    )}
+
+                    {coachResponse.encouragement && (
+                        <div className="mt-4 rounded-2xl bg-amber-50 p-4">
+                            <p className="text-sm font-bold text-amber-700">
+                                Encouragement
+                            </p>
+                            <p className="mt-1 font-semibold text-amber-950">
+                                {coachResponse.encouragement}
+                            </p>
+                        </div>
+                    )}
                 </section>
             )}
         </main>

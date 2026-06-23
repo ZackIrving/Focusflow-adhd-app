@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient'
 
 export function useAICoach() {
     const [coachInput, setCoachInput] = useState('')
-    const [coachResponse, setCoachResponse] = useState('')
+    const [coachResponse, setCoachResponse] = useState(null)
     const [coachStatus, setCoachStatus] = useState('')
 
     async function getCoachResponse(event) {
@@ -28,7 +28,18 @@ export function useAICoach() {
             return
         }
 
-        setCoachResponse(data.result)
+        try {
+            const parsedResponse = JSON.parse(data.result)
+            setCoachResponse(parsedResponse)
+        } catch (parseError) {
+            console.error('AI Coach parse error:', parseError)
+            setCoachResponse({
+                summary: data.result,
+                tasks: [],
+                startHere: '',
+                encouragement: '',
+            })
+        }
         setCoachStatus('Coach response ready.')
     }
 

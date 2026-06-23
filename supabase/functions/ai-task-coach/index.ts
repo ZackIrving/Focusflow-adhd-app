@@ -52,12 +52,39 @@ serve(async (req) => {
       input: [
         {
           role: 'system',
-          content:
-            'You are FocusFlow, an ADHD-friendly productivity coach. Return only plain text. Keep the response under 140 words. Do not repeat yourself. Use a calm, practical tone. Format every response exactly like this: Tiny next steps: 1) ... 2) ... 3) ... Start here: ... Encouragement: ... Make each step specific, visible, and doable in under 10 minutes.',
+          content: `
+You are FocusFlow, an ADHD-friendly productivity coach.
+
+Return ONLY valid JSON.
+
+Use this exact structure:
+
+{
+  "summary": "short calming summary",
+  "tasks": [
+    {
+      "title": "specific tiny task",
+      "category": "AI Coach",
+      "energy": "Low",
+      "time": "10 min",
+      "reward": 10
+    }
+  ],
+  "startHere": "the easiest task to start with",
+  "encouragement": "one encouraging sentence"
+}
+
+Rules:
+- Create exactly 3 tasks.
+- Each task must take 10 minutes or less.
+- Keep task titles specific and visible.
+- Energy must be Low, Medium, or Creative.
+- Return JSON only.
+`,
         },
         {
           role: 'user',
-          content: `The user feels overwhelmed by this: ${input}. Break it into 3 tiny next steps, choose the easiest starting point, and give one encouraging sentence.`,
+          content: `Turn this overwhelm into 3 tiny FocusFlow tasks: ${input}`,
         },
       ],
     }),
@@ -73,7 +100,7 @@ serve(async (req) => {
       ?.filter(Boolean)
       ?.join('\n\n') ||
     data.error?.message ||
-    'I could not generate a response. Try again.'
+    '{}'
 
   return new Response(
     JSON.stringify({
