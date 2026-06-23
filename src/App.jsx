@@ -140,6 +140,23 @@ export default function ADHDProductivityApp() {
     setSyncStatus,
     setTasks,
   } = useTasks(user, updateStreak, addXp, awardBadge, setBulldogReaction)
+
+  async function addCoachTasksToToday(coachTasks) {
+    for (const task of coachTasks) {
+      await addTask({
+        title: task.title,
+        category: task.category || 'AI Coach',
+        energy: task.energy || 'Low',
+        time: task.time || '10 min',
+        reward: task.reward || 10,
+        done: false,
+        recurring: false,
+        recurrence: '',
+        reminder_enabled: false,
+        reminder_time: null,
+      })
+    }
+  }
   const {
     habits,
     habitName,
@@ -566,6 +583,7 @@ export default function ADHDProductivityApp() {
             coachResponse={coachResponse}
             coachStatus={coachStatus}
             getCoachResponse={getCoachResponse}
+            addCoachTasksToToday={addCoachTasksToToday}
           />
         )}
       </div>

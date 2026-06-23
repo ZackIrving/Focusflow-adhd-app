@@ -4,6 +4,7 @@ export default function AICoachPage({
     coachResponse,
     coachStatus,
     getCoachResponse,
+    addCoachTasksToToday,
 }) {
     return (
         <main className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg sm:p-8">
@@ -73,6 +74,16 @@ export default function AICoachPage({
                                 </div>
                             ))}
                         </div>
+                    )}
+
+                    {coachResponse.tasks?.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => addCoachTasksToToday(coachResponse.tasks)}
+                            className="mt-4 rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-slate-700"
+                        >
+                            Add These Tasks to Today
+                        </button>
                     )}
 
                     {coachResponse.startHere && (
