@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
 
-export function useAICoach() {
+export function useAICoach(user, tasks, habits, totalXP) {
     const [coachInput, setCoachInput] = useState('')
     const [coachResponse, setCoachResponse] = useState(null)
     const [coachStatus, setCoachStatus] = useState('')
@@ -21,6 +21,16 @@ export function useAICoach() {
         const { data, error } = await supabase.functions.invoke('ai-task-coach', {
             body: {
                 input: coachInput,
+                context: {
+                    totalXP,
+                    activeTasks: tasks
+                        .filter((task) => !task.done)
+                        .slice(0, 10)
+                        .map((task) => task.title),
+                    habits: habits
+                        .slice(0, 10)
+                        .map((habit) => habit.title || habit.name),
+                },
             },
         })
 

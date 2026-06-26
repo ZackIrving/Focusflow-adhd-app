@@ -20,7 +20,7 @@ serve(async (req) => {
     })
   }
 
-  const { input } = await req.json()
+  const { input, context } = await req.json()
 
   if (!input) {
     return new Response(
@@ -84,7 +84,24 @@ Rules:
         },
         {
           role: 'user',
-          content: `Turn this overwhelm into 3 tiny FocusFlow tasks: ${input}`,
+          content: `
+User Input:
+${input}
+
+Current FocusFlow Context:
+
+XP:
+${context?.totalXP || 0}
+
+Active Tasks:
+${context?.activeTasks?.join('\n') || 'None'}
+
+Habits:
+${context?.habits?.join('\n') || 'None'}
+
+Generate coaching based on the user's existing workload.
+Avoid creating duplicate tasks if similar tasks already exist.
+`,
         },
       ],
     }),

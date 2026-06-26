@@ -184,7 +184,12 @@ export default function ADHDProductivityApp() {
     getCoachResponse,
     coachTasksAdded,
     setCoachTasksAdded,
-  } = useAICoach()
+  } = useAICoach(
+    user,
+    tasks,
+    habits,
+    totalXP
+  )
 
   useEffect(() => {
     if (!tasks.length) return
