@@ -9,42 +9,65 @@ export async function buildBuddyContext(
   userId: string
 ): Promise<BuddyContext> {
 
-  const { data: tasks } = await supabase
-    .from('tasks')
-    .select('*')
-    .eq('user_id', userId)
+  const [
+    tasksResult,
+    habitsResult,
+    progressResult,
+    pomodorosResult,
+  ] = await Promise.all([
+    supabase
+      .from('tasks')
+      .select('*')
+      .eq('user_id', userId),
 
-  const { data: habits } = await supabase
-    .from('habits')
-    .select('*')
-    .eq('user_id', userId)
+    supabase
+      .from('habits')
+      .select('*')
+      .eq('user_id', userId),
 
-  const { data: progress } = await supabase
-    .from('user_progress')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle()
+    supabase
+      .from('user_progress')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle(),
 
-  const { data: pomodoros } = await supabase
-    .from('pomodoro_sessions')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('completed', true)
+    supabase
+      .from('pomodoro_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('completed', true),
+  ])
 
-  const typedTasks = (tasks || []) as BuddyTask[]
-  const typedHabits = (habits || []) as BuddyHabit[]
+  const typedTasks =
+    (tasksResult.data || []) as BuddyTask[]
+
+  const typedHabits =
+    (habitsResult.data || []) as BuddyHabit[]
 
   return {
     userId,
 
     snapshot: {
-      activeTasks: typedTasks.filter(t => !t.done).length,
-      completedTasks: typedTasks.filter(t => t.done).length,
-      habitsRemaining: typedHabits.filter(h => !h.completed_today).length,
-      xp: progress?.xp ?? 0,
-      level: progress?.level ?? 1,
-      completedPomodoros: pomodoros?.length ?? 0,
-      momentum: 0, // We'll calculate this next.
+      activeTasks:
+        typedTasks.filter((t) => !t.done).length,
+
+      completedTasks:
+        typedTasks.filter((t) => t.done).length,
+
+      habitsRemaining:
+        typedHabits.filter(
+          (h) => !h.completed_today
+        ).length,
+
+      xp: progressResult.data?.xp ?? 0,
+
+      level:
+        progressResult.data?.level ?? 1,
+
+      completedPomodoros:
+        pomodorosResult.data?.length ?? 0,
+
+      momentum: 0,
     },
 
     tasks: typedTasks,

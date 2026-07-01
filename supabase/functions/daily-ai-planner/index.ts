@@ -40,6 +40,16 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
+  const buddyContext = await buildBuddyContext(
+  supabase,
+  userId
+)
+
+console.log(
+  'Buddy Context:',
+  JSON.stringify(buddyContext, null, 2)
+)
+
   const today = new Date().toISOString().slice(0, 10)
 
   const { data: existingPlan } = await supabase
@@ -65,68 +75,7 @@ serve(async (req) => {
     )
   }
 
-  const { data: tasks, error: tasksError } = await supabase
-    .from('tasks')
-    .select(
-      'title, category, energy, time, reward, done, recurring, recurrence, created_at'
-    )
-    .eq('user_id', userId)
-
-  const { data: habits, error: habitsError } = await supabase
-    .from('habits')
-    .select('name, completed_today, created_at')
-    .eq('user_id', userId)
-
-  const { data: progress, error: progressError } = await supabase
-    .from('user_progress')
-    .select('xp, level')
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  const { data: pomodoros, error: pomodorosError } = await supabase
-    .from('pomodoro_sessions')
-    .select('duration, completed, created_at')
-    .eq('user_id', userId)
-    .eq('completed', true)
-
-  if (tasksError || habitsError || progressError || pomodorosError) {
-    return new Response(
-      JSON.stringify({
-        success: false,
-        tasksError,
-        habitsError,
-        progressError,
-        pomodorosError,
-      }),
-      {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-  }
-
-  const activeTasks = tasks?.filter((task) => !task.done) || []
-  const completedTasks = tasks?.filter((task) => task.done) || []
-  const remainingHabits =
-    habits?.filter((habit) => !habit.completed_today) || []
-
-  const context = {
-    date: today,
-    intensity,
-    snapshot: {
-      activeTaskCount: activeTasks.length,
-      completedTaskCount: completedTasks.length,
-      habitsRemaining: remainingHabits.length,
-      xp: progress?.xp || 0,
-      level: progress?.level || 1,
-      completedPomodoros: pomodoros?.length || 0,
-    },
-    activeTasks: activeTasks.slice(0, 10),
-    habits: habits?.slice(0, 10) || [],
-  }
+ const context = await buildBuddyContext(supabase, userId)
 
   return new Response(
     JSON.stringify({
