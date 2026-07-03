@@ -1,6 +1,8 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { buildBuddyContext } from '../_shared/buddy/contextBuilder.ts'
+import { buildPlannerPrompt } from '../_shared/buddy/plannerPrompt.ts'
+import { generateTextWithOpenAI } from '../_shared/buddy/openai.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -77,17 +79,76 @@ console.log(
 
  const context = await buildBuddyContext(supabase, userId)
 
+ const prompt = buildPlannerPrompt(context, intensity)
+
+const aiResult = await generateTextWithOpenAI(prompt)
+
+let plan
+
+try {
+  plan = JSON.parse(aiResult.outputText)
+} catch (error) {
+  console.error('Daily planner JSON parse error:', error)
+
   return new Response(
     JSON.stringify({
-      source: 'new',
-      message: 'Planner context built successfully.',
-      context,
+      success: false,
+      error: 'Could not parse AI planner response.',
+      raw: aiResult.outputText,
     }),
     {
+      status: 500,
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
       },
     }
   )
+}
+
+const { data: savedPlan, error: saveError } = await supabase
+  .from('daily_ai_plans')
+  .insert({
+    user_id: userId,
+    plan_date: today,
+    intensity,
+    greeting: plan.greeting,
+    summary: plan.summary,
+    priorities: plan.priorities,
+    timeline: plan.timeline,
+    bulldog_message: plan.bulldogMessage,
+    momentum_snapshot: context.snapshot.momentum,
+    context_hash: 'v1',
+  })
+  .select()
+  .single()
+
+if (saveError) {
+  return new Response(
+    JSON.stringify({
+      success: false,
+      error: saveError,
+    }),
+    {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+      },
+    }
+  )
+}
+
+return new Response(
+  JSON.stringify({
+    source: 'new',
+    plan: savedPlan,
+  }),
+  {
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'application/json',
+    },
+  }
+)
 })
