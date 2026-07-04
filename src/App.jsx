@@ -31,6 +31,7 @@ import DistractionBlockerPage from './components/DistractionBlockerPage'
 import { usePushNotifications } from './hooks/usePushNotifications'
 import AICoachPage from './components/AICoachPage'
 import { useAICoach } from './hooks/useAICoach'
+import { useDailyPlanner } from './hooks/useDailyPlanner'
 
 export default function ADHDProductivityApp() {
   const {
@@ -51,6 +52,12 @@ export default function ADHDProductivityApp() {
     updateDailyPlan,
     saveDailyPlan,
   } = useDailyPlan(user)
+  const {
+    plan,
+    plannerStatus,
+    plannerLoading,
+    loadDailyPlan,
+  } = useDailyPlanner(user)
   const {
     weeklyReview,
     weeklyReviewStatus,
