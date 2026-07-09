@@ -1,3 +1,5 @@
+import type { BuddyTimeContext } from './timeContext.ts'
+
 export interface BuddyTask {
   title: string
   category: string | null
@@ -35,6 +37,8 @@ export interface BuddyContext {
   userId: string
 
   snapshot: BuddySnapshot
+
+  timeContext: BuddyTimeContext
 
   previousDay: {
     completedTasks: number
