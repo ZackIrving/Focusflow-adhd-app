@@ -32,6 +32,7 @@ import { usePushNotifications } from './hooks/usePushNotifications'
 import AICoachPage from './components/AICoachPage'
 import { useAICoach } from './hooks/useAICoach'
 import { useDailyPlanner } from './hooks/useDailyPlanner'
+import TodayPage from './components/TodayPage'
 
 export default function ADHDProductivityApp() {
   const {
@@ -428,113 +429,47 @@ export default function ADHDProductivityApp() {
         )}
 
         {!isLoading && activeMode === 'Today' && (
-          <main className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <section className="space-y-6 xl:col-span-2">
-              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg sm:p-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold">Today’s Dopamine Queue</h2>
-                    <p className="mt-1 text-slate-500">Small tasks, visible progress, fast wins.</p>
-                  </div>
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <button
-                      onClick={() => setShowTaskForm(!showTaskForm)}
-                      className="rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-slate-700"
-                    >
-                      {showTaskForm ? 'Close Form' : '+ Custom Task'}
-                    </button>
-                    <button
-                      onClick={addTinyTask}
-                      className="rounded-2xl bg-indigo-600 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-indigo-700"
-                    >
-                      + Tiny Task
-                    </button>
-                  </div>
-                </div>
-
-                {showTaskForm && (
-                  <CustomTaskForm
-                    taskForm={taskForm}
-                    updateTaskForm={updateTaskForm}
-                    handleCreateCustomTask={handleCreateCustomTask}
-                    setTaskForm={setTaskForm}
-                    setShowTaskForm={setShowTaskForm}
-                    emptyTaskForm={emptyTaskForm}
-                  />
-                )}
-
-                <div className="mt-6 space-y-4">
-                  {tasks.map((task) => (
-                    <TaskCard
-                      key={task.id || task.title}
-                      task={task}
-                      editingTaskId={editingTaskId}
-                      editForm={editForm}
-                      updateEditForm={updateEditForm}
-                      saveEditedTask={saveEditedTask}
-                      cancelEditingTask={cancelEditingTask}
-                      toggleTask={toggleTask}
-                      startEditingTask={startEditingTask}
-                      deleteTask={deleteTask}
-                    />
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {user && (
-              <section className="mb-5 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-                <button
-                  onClick={enablePushNotifications}
-                  className="rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-slate-700"
-                >
-                  Enable Push Notifications
-                </button>
-
-                {pushStatus && (
-                  <p className="mt-3 text-sm font-semibold text-slate-600">
-                    {pushStatus}
-                  </p>
-                )}
-              </section>
-            )}
-
-            <aside className="space-y-6">
-              <DailyStats
-                completedToday={completedToday}
-                totalXP={totalXP}
-                activeTasks={activeTasks}
-                estimatedFocusMinutes={estimatedFocusMinutes}
-                nextTask={nextTask}
-              />
-
-              <BulldogCompanion
-                level={level}
-                xp={xp}
-                bulldogReaction={bulldogReaction}
-                setBulldogReaction={setBulldogReaction}
-                completedToday={completedToday}
-                completedPomodoros={completedPomodoros}
-                habits={habits}
-              />
-
-              <HabitTracker
-                habits={habits}
-                habitName={habitName}
-                setHabitName={setHabitName}
-                habitStatus={habitStatus}
-                habitStats={habitStats}
-                addHabit={addHabit}
-                toggleHabit={toggleHabit}
-                deleteHabit={deleteHabit}
-              />
-
-              <AITaskCoach
-                tasks={tasks}
-                habits={habits}
-              />
-            </aside>
-          </main>
+          <TodayPage
+            tasks={tasks}
+            plan={plan}
+            plannerLoading={plannerLoading}
+            plannerStatus={plannerStatus}
+            loadDailyPlan={loadDailyPlan}
+            showTaskForm={showTaskForm}
+            setShowTaskForm={setShowTaskForm}
+            taskForm={taskForm}
+            setTaskForm={setTaskForm}
+            updateTaskForm={updateTaskForm}
+            handleCreateCustomTask={handleCreateCustomTask}
+            emptyTaskForm={emptyTaskForm}
+            addTinyTask={addTinyTask}
+            editingTaskId={editingTaskId}
+            editForm={editForm}
+            updateEditForm={updateEditForm}
+            saveEditedTask={saveEditedTask}
+            cancelEditingTask={cancelEditingTask}
+            toggleTask={toggleTask}
+            startEditingTask={startEditingTask}
+            deleteTask={deleteTask}
+            completedToday={completedToday}
+            totalXP={totalXP}
+            activeTasks={activeTasks}
+            estimatedFocusMinutes={estimatedFocusMinutes}
+            nextTask={nextTask}
+            level={level}
+            xp={xp}
+            bulldogReaction={bulldogReaction}
+            setBulldogReaction={setBulldogReaction}
+            completedPomodoros={completedPomodoros}
+            habits={habits}
+            habitName={habitName}
+            setHabitName={setHabitName}
+            habitStatus={habitStatus}
+            habitStats={habitStats}
+            addHabit={addHabit}
+            toggleHabit={toggleHabit}
+            deleteHabit={deleteHabit}
+          />
         )}
 
         {!isLoading && activeMode === 'Daily Plan' && (

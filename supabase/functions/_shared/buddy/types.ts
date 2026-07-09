@@ -31,6 +31,26 @@ export interface BuddyContext {
 
   snapshot: BuddySnapshot
 
+  previousDay: {
+    completedTasks: number
+    completedHabits: number
+    completedPomodoros: number
+  }
+
+  currentDay: {
+    activeTasks: number
+    remainingHabits: number
+    estimatedFocusMinutes: number
+  }
+
+  userProgress: {
+    xp: number
+    level: number
+    currentStreak: number
+  }
+
+  workload: 'light' | 'medium' | 'heavy'
+
   tasks: BuddyTask[]
 
   habits: BuddyHabit[]

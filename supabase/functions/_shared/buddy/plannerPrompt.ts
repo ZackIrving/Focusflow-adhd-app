@@ -14,6 +14,8 @@ Return ONLY valid JSON using this structure:
 {
   "greeting": "",
   "summary": "",
+   "mood": "calm",
+  "workload": "medium",
   "priorities": [
     {
       "task": "",
@@ -40,6 +42,12 @@ Rules:
 - If intensity is Sprint, recommend up to 5 priorities.
 - Be encouraging, never guilt-based.
 - Mention momentum when useful.
+- The greeting should feel personal and context-aware.
+- The greeting may reference yesterday's progress if available.
+- The greeting may reference today's workload if useful.
+- The greeting may reference XP, level, or streak if useful.
+- mood must be one of: calm, focused, motivated, celebrating.
+- workload must be one of: light, medium, heavy.
 
 Intensity:
 ${intensity}

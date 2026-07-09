@@ -4,16 +4,19 @@ import type {
   BuddyHabit,
 } from './types.ts'
 
+import { calculateWorkload } from './workload.ts'
+import { estimateFocusMinutes } from './focusEstimator.ts'
+
 export async function buildBuddyContext(
   supabase: any,
   userId: string
 ): Promise<BuddyContext> {
-
   const [
     tasksResult,
     habitsResult,
     progressResult,
     pomodorosResult,
+    streakResult,
   ] = await Promise.all([
     supabase
       .from('tasks')
@@ -36,39 +39,68 @@ export async function buildBuddyContext(
       .select('*')
       .eq('user_id', userId)
       .eq('completed', true),
+
+    supabase
+      .from('user_stats')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle(),
   ])
 
-  const typedTasks =
-    (tasksResult.data || []) as BuddyTask[]
+  const typedTasks = (tasksResult.data || []) as BuddyTask[]
+  const typedHabits = (habitsResult.data || []) as BuddyHabit[]
 
-  const typedHabits =
-    (habitsResult.data || []) as BuddyHabit[]
+  const activeTasks = typedTasks.filter(
+    (task) => !task.done
+  )
+
+  const completedTasks = typedTasks.filter(
+    (task) => task.done
+  )
+
+  const remainingHabits = typedHabits.filter(
+    (habit) => !habit.completed_today
+  )
+
+  const workload = calculateWorkload(
+    activeTasks.length
+  )
 
   return {
     userId,
 
     snapshot: {
-      activeTasks:
-        typedTasks.filter((t) => !t.done).length,
-
-      completedTasks:
-        typedTasks.filter((t) => t.done).length,
-
-      habitsRemaining:
-        typedHabits.filter(
-          (h) => !h.completed_today
-        ).length,
-
+      activeTasks: activeTasks.length,
+      completedTasks: completedTasks.length,
+      habitsRemaining: remainingHabits.length,
       xp: progressResult.data?.xp ?? 0,
-
-      level:
-        progressResult.data?.level ?? 1,
-
+      level: progressResult.data?.level ?? 1,
       completedPomodoros:
         pomodorosResult.data?.length ?? 0,
-
       momentum: 0,
     },
+
+    previousDay: {
+      completedTasks: 0,
+      completedHabits: 0,
+      completedPomodoros: 0,
+    },
+
+    currentDay: {
+      activeTasks: activeTasks.length,
+      remainingHabits: remainingHabits.length,
+      estimatedFocusMinutes:
+        estimateFocusMinutes(activeTasks),
+    },
+
+    userProgress: {
+      xp: progressResult.data?.xp ?? 0,
+      level: progressResult.data?.level ?? 1,
+      currentStreak:
+        streakResult.data?.current_streak ?? 0,
+    },
+
+    workload,
 
     tasks: typedTasks,
 

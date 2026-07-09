@@ -22,35 +22,23 @@ serve(async (req) => {
     })
   }
 
-  const { userId, intensity = 'Balanced' } = await req.json()
+  const { userId, intensity = 'Balanced', forceRefresh = false } =
+    await req.json()
 
   if (!userId) {
-    return new Response(
-      JSON.stringify({ error: 'Missing userId' }),
-      {
-        status: 400,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
+    return new Response(JSON.stringify({ error: 'Missing userId' }), {
+      status: 400,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+      },
+    })
   }
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
-
-  const buddyContext = await buildBuddyContext(
-  supabase,
-  userId
-)
-
-console.log(
-  'Buddy Context:',
-  JSON.stringify(buddyContext, null, 2)
-)
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -62,7 +50,7 @@ console.log(
     .eq('intensity', intensity)
     .maybeSingle()
 
-  if (existingPlan) {
+  if (existingPlan && !forceRefresh) {
     return new Response(
       JSON.stringify({
         source: 'cache',
@@ -77,78 +65,120 @@ console.log(
     )
   }
 
- const context = await buildBuddyContext(supabase, userId)
+  if (existingPlan && forceRefresh) {
+    const { error: deleteError } = await supabase
+      .from('daily_ai_plans')
+      .delete()
+      .eq('user_id', userId)
+      .eq('plan_date', today)
+      .eq('intensity', intensity)
 
- const prompt = buildPlannerPrompt(context, intensity)
-
-const aiResult = await generateTextWithOpenAI(prompt)
-
-let plan
-
-try {
-  plan = JSON.parse(aiResult.outputText)
-} catch (error) {
-  console.error('Daily planner JSON parse error:', error)
-
-  return new Response(
-    JSON.stringify({
-      success: false,
-      error: 'Could not parse AI planner response.',
-      raw: aiResult.outputText,
-    }),
-    {
-      status: 500,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json',
-      },
+    if (deleteError) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: deleteError,
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
     }
-  )
-}
-
-const { data: savedPlan, error: saveError } = await supabase
-  .from('daily_ai_plans')
-  .insert({
-    user_id: userId,
-    plan_date: today,
-    intensity,
-    greeting: plan.greeting,
-    summary: plan.summary,
-    priorities: plan.priorities,
-    timeline: plan.timeline,
-    bulldog_message: plan.bulldogMessage,
-    momentum_snapshot: context.snapshot.momentum,
-    context_hash: 'v1',
-  })
-  .select()
-  .single()
-
-if (saveError) {
-  return new Response(
-    JSON.stringify({
-      success: false,
-      error: saveError,
-    }),
-    {
-      status: 500,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json',
-      },
-    }
-  )
-}
-
-return new Response(
-  JSON.stringify({
-    source: 'new',
-    plan: savedPlan,
-  }),
-  {
-    headers: {
-      ...corsHeaders,
-      'Content-Type': 'application/json',
-    },
   }
-)
+
+  const context = await buildBuddyContext(supabase, userId)
+  const prompt = buildPlannerPrompt(context, intensity)
+  const aiResult = await generateTextWithOpenAI(prompt)
+
+  console.log('OpenAI Status:', aiResult.status)
+  console.log('OpenAI Output Text:', aiResult.outputText)
+
+  if (aiResult.status !== 200) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        openai: aiResult.raw,
+      }),
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+  }
+
+  let plan
+
+  try {
+    plan = JSON.parse(aiResult.outputText)
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: String(error),
+        outputText: aiResult.outputText,
+      }),
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+  }
+
+  const { data: savedPlan, error: saveError } = await supabase
+    .from('daily_ai_plans')
+    .insert({
+      user_id: userId,
+      plan_date: today,
+      intensity,
+      greeting: plan.greeting,
+      summary: plan.summary,
+      mood: plan.mood,
+      workload: plan.workload,
+      priorities: plan.priorities,
+      timeline: plan.timeline,
+      bulldog_message: plan.bulldogMessage,
+      momentum_snapshot: context.snapshot.momentum,
+      context_hash: 'v1',
+    })
+    .select()
+    .single()
+
+  if (saveError) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: saveError,
+      }),
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+  }
+
+  return new Response(
+    JSON.stringify({
+      source: 'new',
+      plan: savedPlan,
+    }),
+    {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+      },
+    }
+  )
 })
