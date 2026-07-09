@@ -23,7 +23,12 @@ export interface BuddySnapshot {
   xp: number
   level: number
   completedPomodoros: number
-  momentum: number
+  momentum: BuddyMomentum
+}
+
+export interface BuddyMomentum {
+  score: number
+  state: 'low' | 'building' | 'strong' | 'excellent'
 }
 
 export interface BuddyContext {

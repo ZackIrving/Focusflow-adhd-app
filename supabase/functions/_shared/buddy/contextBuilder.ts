@@ -6,6 +6,7 @@ import type {
 
 import { calculateWorkload } from './workload.ts'
 import { estimateFocusMinutes } from './focusEstimator.ts'
+import { calculateMomentum } from './momentum.ts'
 
 export async function buildBuddyContext(
   supabase: any,
@@ -66,6 +67,17 @@ export async function buildBuddyContext(
     activeTasks.length
   )
 
+  const momentum = calculateMomentum({
+  completedTasks: completedTasks.length,
+  remainingTasks: activeTasks.length,
+  completedHabits:
+    typedHabits.filter((habit) => habit.completed_today).length,
+  completedPomodoros:
+    pomodorosResult.data?.length ?? 0,
+  currentStreak:
+    streakResult.data?.current_streak ?? 0,
+})
+
   return {
     userId,
 
@@ -77,7 +89,7 @@ export async function buildBuddyContext(
       level: progressResult.data?.level ?? 1,
       completedPomodoros:
         pomodorosResult.data?.length ?? 0,
-      momentum: 0,
+      momentum,
     },
 
     previousDay: {
