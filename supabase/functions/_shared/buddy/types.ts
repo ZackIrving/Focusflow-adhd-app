@@ -33,6 +33,25 @@ export interface BuddyMomentum {
   state: 'low' | 'building' | 'strong' | 'excellent'
 }
 
+export type BuddyWorkloadLevel =
+  | 'light'
+  | 'medium'
+  | 'heavy'
+
+export type BuddyWorkloadPressure =
+  | 'low'
+  | 'moderate'
+  | 'high'
+
+export interface BuddyWorkloadProfile {
+  level: BuddyWorkloadLevel
+  pressure: BuddyWorkloadPressure
+  activeTasks: number
+  completedTasks: number
+  estimatedFocusMinutes: number
+  averageTaskMinutes: number
+}
+
 export interface BuddyContext {
   userId: string
 
@@ -58,7 +77,9 @@ export interface BuddyContext {
     currentStreak: number
   }
 
-  workload: 'light' | 'medium' | 'heavy'
+ workload: BuddyWorkloadLevel
+
+workloadProfile: BuddyWorkloadProfile
 
   tasks: BuddyTask[]
 

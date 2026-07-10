@@ -4,7 +4,10 @@ import type {
   BuddyHabit,
 } from './types.ts'
 
-import { calculateWorkload } from './workload.ts'
+import {
+  calculateWorkload,
+  calculateWorkloadProfile,
+} from './workload.ts'
 import { estimateFocusMinutes } from './focusEstimator.ts'
 import { calculateMomentum } from './momentum.ts'
 import { buildTimeContext } from './timeContext.ts'
@@ -64,9 +67,18 @@ export async function buildBuddyContext(
     (habit) => !habit.completed_today
   )
 
-  const workload = calculateWorkload(
-    activeTasks.length
-  )
+  const estimatedFocusMinutes =
+  estimateFocusMinutes(activeTasks)
+
+const workload = calculateWorkload(
+  activeTasks.length
+)
+
+const workloadProfile = calculateWorkloadProfile({
+  activeTasks: activeTasks.length,
+  completedTasks: completedTasks.length,
+  estimatedFocusMinutes,
+})
 
   const momentum = calculateMomentum({
   completedTasks: completedTasks.length,
@@ -106,8 +118,7 @@ const timeContext = buildTimeContext()
     currentDay: {
       activeTasks: activeTasks.length,
       remainingHabits: remainingHabits.length,
-      estimatedFocusMinutes:
-        estimateFocusMinutes(activeTasks),
+     estimatedFocusMinutes,
     },
 
     userProgress: {
@@ -118,6 +129,8 @@ const timeContext = buildTimeContext()
     },
 
     workload,
+    
+    workloadProfile,
 
     tasks: typedTasks,
 
