@@ -1,4 +1,8 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { buildBuddyContext } from '../_shared/buddy/contextBuilder.ts'
+import { buildCoachPrompt } from '../_shared/buddy/coachPrompt.ts'
+import { generateTextWithOpenAI } from '../_shared/buddy/openai.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,13 +24,124 @@ serve(async (req) => {
     })
   }
 
-  const { input, context } = await req.json()
+  try {
+    const { input, userId } = await req.json()
 
-  if (!input) {
+    if (!input?.trim()) {
+      return new Response(
+        JSON.stringify({
+          error: 'Missing input',
+        }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+    }
+
+    if (!userId) {
+      return new Response(
+        JSON.stringify({
+          error: 'Missing userId',
+        }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
+
+    const context = await buildBuddyContext(
+      supabase,
+      userId
+    )
+
+    const prompt = buildCoachPrompt(
+      input.trim(),
+      context
+    )
+
+    const aiResult =
+      await generateTextWithOpenAI(prompt)
+
+    console.log(
+      'AI Coach OpenAI Status:',
+      aiResult.status
+    )
+
+    console.log(
+      'AI Coach Buddy Context:',
+      JSON.stringify(context, null, 2)
+    )
+
+    if (aiResult.status !== 200) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          openai: aiResult.raw,
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+    }
+
+    try {
+      JSON.parse(aiResult.outputText)
+    } catch (parseError) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Invalid AI Coach JSON: ${String(parseError)}`,
+          outputText: aiResult.outputText,
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+    }
+
     return new Response(
-      JSON.stringify({ error: 'Missing input' }),
+      JSON.stringify({
+        status: aiResult.status,
+        result: aiResult.outputText,
+      }),
       {
-        status: 400,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+  } catch (error) {
+    console.error('AI Coach Edge Function error:', error)
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: String(error),
+      }),
+      {
+        status: 500,
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json',
@@ -34,101 +149,4 @@ serve(async (req) => {
       }
     )
   }
-
-  const response = await fetch('https://api.openai.com/v1/responses', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-5-mini',
-      reasoning: {
-        effort: 'low',
-      },
-      text: {
-        verbosity: 'low',
-      },
-      input: [
-        {
-          role: 'system',
-          content: `
-You are FocusFlow, an ADHD-friendly productivity coach.
-
-Return ONLY valid JSON.
-
-Use this exact structure:
-
-{
-  "summary": "short calming summary",
-  "tasks": [
-    {
-      "title": "specific tiny task",
-      "category": "AI Coach",
-      "energy": "Low",
-      "time": "10 min",
-      "reward": 10
-    }
-  ],
-  "startHere": "the easiest task to start with",
-  "encouragement": "one encouraging sentence"
-}
-
-Rules:
-- Create exactly 3 tasks.
-- Each task must take 10 minutes or less.
-- Keep task titles specific and visible.
-- Energy must be Low, Medium, or Creative.
-- Return JSON only.
-`,
-        },
-        {
-          role: 'user',
-          content: `
-User Input:
-${input}
-
-Current FocusFlow Context:
-
-XP:
-${context?.totalXP || 0}
-
-Active Tasks:
-${context?.activeTasks?.join('\n') || 'None'}
-
-Habits:
-${context?.habits?.join('\n') || 'None'}
-
-Generate coaching based on the user's existing workload.
-Avoid creating duplicate tasks if similar tasks already exist.
-`,
-        },
-      ],
-    }),
-  })
-
-  const data = await response.json()
-
-  const outputText =
-    data.output_text ||
-    data.output
-      ?.flatMap((item: any) => item.content || [])
-      ?.map((content: any) => content.text || content.output_text)
-      ?.filter(Boolean)
-      ?.join('\n\n') ||
-    data.error?.message ||
-    '{}'
-
-  return new Response(
-    JSON.stringify({
-      status: response.status,
-      result: outputText,
-    }),
-    {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json',
-      },
-    }
-  )
 })

@@ -134,6 +134,27 @@ serve(async (req) => {
     )
   }
 
+  const momentumScore = Number(
+  context.snapshot.momentum.score
+)
+
+if (!Number.isInteger(momentumScore)) {
+  return new Response(
+    JSON.stringify({
+      success: false,
+      error: 'Momentum score must be an integer',
+      receivedMomentum: context.snapshot.momentum,
+    }),
+    {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+      },
+    }
+  )
+}
+
   const { data: savedPlan, error: saveError } = await supabase
     .from('daily_ai_plans')
     .insert({
@@ -147,7 +168,7 @@ serve(async (req) => {
       priorities: plan.priorities,
       timeline: plan.timeline,
       bulldog_message: plan.bulldogMessage,
-      momentum_snapshot: context.snapshot.momentum,
+      momentum_snapshot: momentumScore,
       context_hash: 'v1',
     })
     .select()

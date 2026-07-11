@@ -21,16 +21,7 @@ export function useAICoach(user, tasks, habits, totalXP) {
         const { data, error } = await supabase.functions.invoke('ai-task-coach', {
             body: {
                 input: coachInput,
-                context: {
-                    totalXP,
-                    activeTasks: tasks
-                        .filter((task) => !task.done)
-                        .slice(0, 10)
-                        .map((task) => task.title),
-                    habits: habits
-                        .slice(0, 10)
-                        .map((habit) => habit.title || habit.name),
-                },
+                userId: user?.id,
             },
         })
 
