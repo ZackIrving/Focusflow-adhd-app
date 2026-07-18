@@ -18,6 +18,11 @@ export interface BuddyHabit {
   created_at: string
 }
 
+export interface BuddyMomentum {
+  score: number
+  state: 'low' | 'building' | 'strong' | 'excellent'
+}
+
 export interface BuddySnapshot {
   activeTasks: number
   completedTasks: number
@@ -26,11 +31,6 @@ export interface BuddySnapshot {
   level: number
   completedPomodoros: number
   momentum: BuddyMomentum
-}
-
-export interface BuddyMomentum {
-  score: number
-  state: 'low' | 'building' | 'strong' | 'excellent'
 }
 
 export type BuddyWorkloadLevel =
@@ -77,9 +77,9 @@ export interface BuddyContext {
     currentStreak: number
   }
 
- workload: BuddyWorkloadLevel
+  workload: BuddyWorkloadLevel
 
-workloadProfile: BuddyWorkloadProfile
+  workloadProfile: BuddyWorkloadProfile
 
   tasks: BuddyTask[]
 

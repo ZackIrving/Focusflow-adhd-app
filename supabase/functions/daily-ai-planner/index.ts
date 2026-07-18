@@ -156,8 +156,9 @@ if (!Number.isInteger(momentumScore)) {
 }
 
   const { data: savedPlan, error: saveError } = await supabase
-    .from('daily_ai_plans')
-    .insert({
+  .from('daily_ai_plans')
+  .upsert(
+    {
       user_id: userId,
       plan_date: today,
       intensity,
@@ -170,9 +171,13 @@ if (!Number.isInteger(momentumScore)) {
       bulldog_message: plan.bulldogMessage,
       momentum_snapshot: momentumScore,
       context_hash: 'v1',
-    })
-    .select()
-    .single()
+    },
+    {
+      onConflict: 'user_id,plan_date,intensity',
+    }
+  )
+  .select()
+  .single()
 
   if (saveError) {
     return new Response(
